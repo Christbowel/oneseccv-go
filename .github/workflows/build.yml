@@ -1,44 +1,41 @@
-name: Build Windows MSI
+name: Build & Release
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    tags:
+      - "v*"          # Déclenché uniquement sur les tags v1.0, v2.0, etc.
+  workflow_dispatch:  # Lancement manuel possible
 
 jobs:
-  build:
+
+  # ─────────────────────────────────────────────────────
+  # WINDOWS — EXE + MSI
+  # ─────────────────────────────────────────────────────
+  build-windows:
+    name: Windows (EXE + MSI)
     runs-on: windows-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install Wails CLI
+      - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Install frontend dependencies
+      - name: Install frontend deps
         working-directory: frontend
         run: npm install
 
-      - name: Build EXE with Wails
+      - name: Build EXE
         run: wails build -platform windows/amd64
 
-      - name: Verify EXE
-        run: |
-          if (!(Test-Path "build\bin\OneSecCV.exe")) { Write-Error "EXE not found"; exit 1 }
-          Write-Host "EXE ready: $((Get-Item 'build\bin\OneSecCV.exe').Length / 1MB) MB"
-
-      - name: Install WiX Toolset v3
+      - name: Install WiX Toolset
         run: |
           choco install wixtoolset --version=3.14.0 -y
           echo "C:\Program Files (x86)\WiX Toolset v3.14\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -49,19 +46,148 @@ jobs:
           candle.exe -ext WixUIExtension OneSecCV.wxs
           light.exe  -ext WixUIExtension -out OneSecCV.msi OneSecCV.wixobj
 
-      - name: Verify MSI
-        run: |
-          if (!(Test-Path "installer\OneSecCV.msi")) { Write-Error "MSI not found"; exit 1 }
-          Write-Host "MSI ready: $((Get-Item 'installer\OneSecCV.msi').Length / 1MB) MB"
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: OneSecCV-Windows-Portable
+          path: build\bin\OneSecCV.exe
 
-      - name: Upload MSI (installer)
+      - name: Upload MSI
         uses: actions/upload-artifact@v4
         with:
           name: OneSecCV-Windows-Installer
           path: installer\OneSecCV.msi
 
-      - name: Upload EXE (portable)
+  # ─────────────────────────────────────────────────────
+  # LINUX — AppImage
+  # ─────────────────────────────────────────────────────
+  build-linux:
+    name: Linux (AppImage)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.0-dev \
+            pkg-config \
+            build-essential \
+            libayatana-appindicator3-dev
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm install
+
+      - name: Build Linux binary
+        run: wails build -platform linux/amd64
+
+      - name: Upload Linux binary
         uses: actions/upload-artifact@v4
         with:
-          name: OneSecCV-Windows-Portable
-          path: build\bin\OneSecCV.exe
+          name: OneSecCV-Linux
+          path: build/bin/OneSecCV
+
+  # ─────────────────────────────────────────────────────
+  # MACOS — .app bundle
+  # ─────────────────────────────────────────────────────
+  build-macos:
+    name: macOS (.app)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm install
+
+      - name: Build macOS app
+        run: wails build -platform darwin/universal
+
+      - name: Zip .app bundle
+        run: |
+          cd build/bin
+          zip -r OneSecCV-macOS.zip OneSecCV.app
+
+      - name: Upload macOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: OneSecCV-macOS
+          path: build/bin/OneSecCV-macOS.zip
+
+  # ─────────────────────────────────────────────────────
+  # RELEASE — Crée la release GitHub avec tous les assets
+  # ─────────────────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Display artifacts
+        run: find artifacts/ -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "OneSecCV ${{ github.ref_name }}"
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            ## OneSecCV ${{ github.ref_name }}
+
+            AI-Powered CV Generator — Built with Go, Wails & React.
+
+            ### Downloads
+
+            | Platform | File | Notes |
+            |---|---|---|
+            | 🪟 Windows | `OneSecCV-Windows-Installer.msi` | Recommended — includes installer & shortcuts |
+            | 🪟 Windows | `OneSecCV-Windows-Portable.exe` | Portable — no installation needed |
+            | 🐧 Linux | `OneSecCV-Linux` | Requires TeX Live: `sudo apt install texlive-full` |
+            | 🍎 macOS | `OneSecCV-macOS.zip` | Requires MacTeX: https://tug.org/mactex/ |
+
+            ### Requirements
+            - A free Google AI API key from [aistudio.google.com](https://aistudio.google.com/app/apikey)
+            - MiKTeX (Windows) or TeX Live (Linux/Mac) for PDF compilation
+
+            ### Privacy
+            All data is processed locally. Your API key is stored on your machine only.
+
+          files: |
+            artifacts/OneSecCV-Windows-Installer/OneSecCV.msi
+            artifacts/OneSecCV-Windows-Portable/OneSecCV.exe
+            artifacts/OneSecCV-Linux/OneSecCV
+            artifacts/OneSecCV-macOS/OneSecCV-macOS.zip
