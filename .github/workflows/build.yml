@@ -3,16 +3,16 @@ name: Build & Release
 on:
   push:
     tags:
-      - "v*"          # Déclenché uniquement sur les tags v1.0, v2.0, etc.
-  workflow_dispatch:  # Lancement manuel possible
+      - "v*"
+  workflow_dispatch:
 
 jobs:
 
   # ─────────────────────────────────────────────────────
-  # WINDOWS — EXE + MSI
+  # WINDOWS — EXE portable uniquement
   # ─────────────────────────────────────────────────────
   build-windows:
-    name: Windows (EXE + MSI)
+    name: Windows (EXE)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,34 +35,17 @@ jobs:
       - name: Build EXE
         run: wails build -platform windows/amd64
 
-      - name: Install WiX Toolset
-        run: |
-          choco install wixtoolset --version=3.14.0 -y
-          echo "C:\Program Files (x86)\WiX Toolset v3.14\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Build MSI
-        working-directory: installer
-        run: |
-          candle.exe -ext WixUIExtension OneSecCV.wxs
-          light.exe  -ext WixUIExtension -out OneSecCV.msi OneSecCV.wixobj
-
       - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
-          name: OneSecCV-Windows-Portable
+          name: OneSecCV-Windows
           path: build\bin\OneSecCV.exe
 
-      - name: Upload MSI
-        uses: actions/upload-artifact@v4
-        with:
-          name: OneSecCV-Windows-Installer
-          path: installer\OneSecCV.msi
-
   # ─────────────────────────────────────────────────────
-  # LINUX — AppImage
+  # LINUX
   # ─────────────────────────────────────────────────────
   build-linux:
-    name: Linux (AppImage)
+    name: Linux
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -102,10 +85,10 @@ jobs:
           path: build/bin/OneSecCV
 
   # ─────────────────────────────────────────────────────
-  # MACOS — .app bundle
+  # MACOS
   # ─────────────────────────────────────────────────────
   build-macos:
-    name: macOS (.app)
+    name: macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -140,7 +123,7 @@ jobs:
           path: build/bin/OneSecCV-macOS.zip
 
   # ─────────────────────────────────────────────────────
-  # RELEASE — Crée la release GitHub avec tous les assets
+  # RELEASE
   # ─────────────────────────────────────────────────────
   release:
     name: Create GitHub Release
@@ -154,9 +137,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
-
-      - name: Display artifacts
-        run: find artifacts/ -type f
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -174,9 +154,8 @@ jobs:
 
             | Platform | File | Notes |
             |---|---|---|
-            | 🪟 Windows | `OneSecCV-Windows-Installer.msi` | Recommended — includes installer & shortcuts |
-            | 🪟 Windows | `OneSecCV-Windows-Portable.exe` | Portable — no installation needed |
-            | 🐧 Linux | `OneSecCV-Linux` | Requires TeX Live: `sudo apt install texlive-full` |
+            | 🪟 Windows | `OneSecCV.exe` | Portable — no installation needed |
+            | 🐧 Linux | `OneSecCV` | Requires TeX Live: `sudo apt install texlive-full` |
             | 🍎 macOS | `OneSecCV-macOS.zip` | Requires MacTeX: https://tug.org/mactex/ |
 
             ### Requirements
@@ -187,7 +166,6 @@ jobs:
             All data is processed locally. Your API key is stored on your machine only.
 
           files: |
-            artifacts/OneSecCV-Windows-Installer/OneSecCV.msi
-            artifacts/OneSecCV-Windows-Portable/OneSecCV.exe
+            artifacts/OneSecCV-Windows/OneSecCV.exe
             artifacts/OneSecCV-Linux/OneSecCV
             artifacts/OneSecCV-macOS/OneSecCV-macOS.zip
