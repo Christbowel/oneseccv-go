@@ -1,9 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import {
-  GetStatus, GetTemplates, GenerateCV,
-  SaveAPIKey, SelectFile, ExtractFileText,
-  OpenOutputFolder
-} from '../wailsjs/go/main/App'
 
 import StarCanvas     from './components/StarCanvas'
 import TabImport      from './components/TabImport'
@@ -11,6 +6,10 @@ import TabManual      from './components/TabManual'
 import TabTemplates   from './components/TabTemplates'
 import TabAPI         from './components/TabAPI'
 import LoadingOverlay from './components/LoadingOverlay'
+import CVPreview      from './components/CVPreview'
+
+import { generateCV, fixCompileError } from './api/gemini'
+import { listTemplates, getTemplate, compilePreview, compilePDF, healthCheck } from './api/compiler'
 
 const TABS = [
   { id: 'templates', label: '⬡ Templates' },
@@ -21,52 +20,123 @@ const TABS = [
 
 export default function App() {
   const [activeTab, setActiveTab]     = useState('templates')
-  const [status, setStatus]           = useState({ apiReady: false, latexReady: false, apiKeyMask: '' })
   const [templates, setTemplates]     = useState([])
   const [selectedTpl, setSelectedTpl] = useState('')
   const [goalJob, setGoalJob]         = useState('')
-  const [photoPath, setPhotoPath]     = useState('')
-  const [withPhoto, setWithPhoto]     = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [resultMsg, setResultMsg]     = useState(null)
   const [toast, setToast]             = useState(null)
-  const [lastPdfPath, setLastPdfPath] = useState(null)
+
+  const [apiKey, setApiKey]           = useState(() => localStorage.getItem('oneseccv_apikey') || '')
+  const [apiReady, setApiReady]       = useState(false)
+  const [compilerReady, setCompilerReady] = useState(false)
+
+  // CV preview
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewPages, setPreviewPages] = useState([])
+  const [typstSource, setTypstSource] = useState('')
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   useEffect(() => {
-    refreshStatus()
-    GetTemplates()
-      .then(tpls => { if (tpls?.length) { setTemplates(tpls); setSelectedTpl(tpls[0].file) } })
+    if (apiKey) setApiReady(true)
+    healthCheck().then(setCompilerReady)
+    listTemplates()
+      .then(tpls => { if (tpls?.length) { setTemplates(tpls); setSelectedTpl(tpls[0].slug) } })
       .catch(e => showToast('error', String(e)))
   }, [])
-
-  const refreshStatus = () => GetStatus().then(setStatus).catch(() => {})
 
   const showToast = useCallback((type, text) => {
     setToast({ type, text })
     setTimeout(() => setToast(null), 5500)
   }, [])
 
-  const handleGenerate = useCallback(async (userData, instruction = '') => {
-    if (!status.apiReady)   { showToast('error', 'API key missing — configure it in ⚙ Settings'); setActiveTab('api'); return }
-    if (!status.latexReady) { showToast('error', 'pdflatex not found — install MiKTeX from miktex.org'); return }
-    setIsGenerating(true); setResultMsg(null); setLastPdfPath(null)
-    try {
-      const r = await GenerateCV({ userData, instruction, goalJob, templateName: selectedTpl, withPhoto, photoPath: withPhoto ? photoPath : '' })
-      setResultMsg({ type: r.success ? 'success' : 'error', text: r.message })
-      if (r.success) {
-        setLastPdfPath(r.outputDir)
-        showToast('success', '✨ CV generated successfully!')
-      } else {
-        showToast('error', 'Generation failed')
-      }
-    } catch(e) {
-      const msg = String(e)
-      setResultMsg({ type: 'error', text: msg })
-      showToast('error', msg)
-    } finally { setIsGenerating(false) }
-  }, [status, goalJob, selectedTpl, withPhoto, photoPath, showToast])
+  const handleSaveKey = useCallback(async (key) => {
+    localStorage.setItem('oneseccv_apikey', key)
+    setApiKey(key)
+    setApiReady(true)
+    showToast('success', 'API key activated!')
+  }, [showToast])
 
-  const openCV = () => OpenOutputFolder().catch(e => showToast('error', String(e)))
+  // ── Generate CV — same logic as original app.go with retry ──
+  const handleGenerate = useCallback(async (userData, instruction = '') => {
+    if (!apiReady) { showToast('error', 'API key missing — configure it in ⚙ Settings'); setActiveTab('api'); return }
+    if (!compilerReady) { showToast('error', 'Compilation server unreachable'); return }
+    if (!selectedTpl) { showToast('error', 'No template selected'); setActiveTab('templates'); return }
+
+    setIsGenerating(true)
+    setResultMsg(null)
+
+    try {
+      const tmpl = await getTemplate(selectedTpl)
+      const source = await generateCV(apiKey, userData, instruction, tmpl.source, goalJob)
+
+      // ── Compile with retry (same as original: 3 attempts) ──
+      const maxAttempts = 3
+      let currentSource = source
+      let lastError = ''
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const preview = await compilePreview(currentSource, 300)
+          setTypstSource(currentSource)
+          setPreviewPages(preview.pages)
+          setShowPreview(true)
+          setResultMsg({ type: 'success', text: '✨ CV generated successfully!' })
+          showToast('success', '✨ CV generated successfully!')
+          return
+        } catch (compileErr) {
+          lastError = compileErr.message
+          if (attempt < maxAttempts) {
+            try {
+              currentSource = await fixCompileError(apiKey, currentSource, lastError)
+            } catch { break }
+          }
+        }
+      }
+
+      setResultMsg({ type: 'error', text: `❌ Compilation failed after ${maxAttempts} attempts.\n\n${lastError}` })
+      showToast('error', 'Compilation failed')
+    } catch (e) {
+      const msg = String(e?.message || e)
+      setResultMsg({ type: 'error', text: `❌ AI Engine error: ${msg}` })
+      showToast('error', msg)
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [apiKey, apiReady, compilerReady, selectedTpl, goalJob, showToast])
+
+  // ── Refine (quick edit) ──
+  const handleRefine = useCallback(async (instruction) => {
+    setPreviewLoading(true)
+    try {
+      const source = await generateCV(apiKey, `CURRENT CV SOURCE:\n${typstSource}`, `MODIFICATION: ${instruction}`, '', '')
+      const preview = await compilePreview(source, 300)
+      setTypstSource(source)
+      setPreviewPages(preview.pages)
+      showToast('success', 'Changes applied!')
+    } catch (e) {
+      showToast('error', String(e?.message || e))
+    } finally {
+      setPreviewLoading(false)
+    }
+  }, [apiKey, typstSource, showToast])
+
+  // ── Download ──
+  const handleDownload = useCallback(async () => {
+    try {
+      const blob = await compilePDF(typstSource)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'cv_oneseccv.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      showToast('error', String(e?.message || e))
+    }
+  }, [typstSource, showToast])
+
+  const apiKeyMask = apiKey ? apiKey.slice(0, 6) + '...' + apiKey.slice(-4) : ''
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#050810' }}>
@@ -75,7 +145,6 @@ export default function App() {
       {/* ── HEADER ── */}
       <header className="flex items-center justify-between px-6 py-3 shrink-0"
         style={{ background: 'rgba(8,12,24,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1A2040' }}>
-
         <div className="flex items-center gap-3">
           <div className="relative w-9 h-9 rounded-xl flex items-center justify-center glow-orange"
             style={{ background: 'linear-gradient(135deg, #FF6B1A, #CC4A00)', border: '1px solid rgba(255,107,26,0.5)' }}>
@@ -85,19 +154,19 @@ export default function App() {
             </svg>
           </div>
           <div>
-            <span className="font-display font-bold text-lg text-white tracking-tight">OneSecCV</span>
+            <span className="font-bold text-lg text-white tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>OneSecCV</span>
             <span className="ml-2 font-mono text-xs" style={{ color: '#FF6B1A' }}>AI Engine by Christ Bowel</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <StatusPill label="AI Engine" ready={status.apiReady} />
-          <StatusPill label="LaTeX"     ready={status.latexReady} />
-          {lastPdfPath && (
-            <button onClick={openCV}
+          <StatusPill label="AI Engine" ready={apiReady} />
+          <StatusPill label="LaTeX" ready={compilerReady} />
+          {showPreview && (
+            <button onClick={handleDownload}
               className="font-bold text-xs px-4 py-2 rounded-lg transition-all duration-200 active:scale-95"
               style={{ background: '#FF6B1A', color: '#fff', boxShadow: '0 0 16px rgba(255,107,26,0.4)' }}>
-              Open CV →
+              Download CV ↓
             </button>
           )}
         </div>
@@ -107,19 +176,44 @@ export default function App() {
       <nav className="flex items-center gap-1 px-6 pt-2 pb-0 shrink-0"
         style={{ background: 'rgba(8,12,24,0.6)', borderBottom: '1px solid #1A2040' }}>
         {TABS.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}>
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id); setShowPreview(false) }}
+            className={`tab-btn ${activeTab === tab.id && !showPreview ? 'active' : ''}`}>
             {tab.label}
           </button>
         ))}
+        {previewPages.length > 0 && (
+          <button onClick={() => setShowPreview(true)}
+            className={`tab-btn ${showPreview ? 'active' : ''}`}>
+            📄 Preview
+          </button>
+        )}
       </nav>
 
       {/* ── CONTENT ── */}
       <main className="flex-1 overflow-hidden relative">
-        <div className={`h-full ${activeTab === 'import'    ? '' : 'hidden'}`}><TabImport    onGenerate={handleGenerate} isGenerating={isGenerating} resultMsg={resultMsg} goalJob={goalJob} setGoalJob={setGoalJob} /></div>
-        <div className={`h-full ${activeTab === 'manual'    ? '' : 'hidden'}`}><TabManual    onGenerate={handleGenerate} isGenerating={isGenerating} resultMsg={resultMsg} /></div>
-        <div className={`h-full ${activeTab === 'templates' ? '' : 'hidden'}`}><TabTemplates templates={templates} selectedTpl={selectedTpl} setSelectedTpl={setSelectedTpl} goalJob={goalJob} setGoalJob={setGoalJob} photoPath={photoPath} setPhotoPath={setPhotoPath} withPhoto={withPhoto} setWithPhoto={setWithPhoto} /></div>
-        <div className={`h-full ${activeTab === 'api'       ? '' : 'hidden'}`}><TabAPI currentKey={status.apiKeyMask} onSave={async key => { await SaveAPIKey(key); refreshStatus(); showToast('success', 'API key activated!') }} showNotification={showToast} /></div>
+        {showPreview ? (
+          <CVPreview
+            pages={previewPages}
+            onDownload={handleDownload}
+            onRefine={handleRefine}
+            loading={previewLoading}
+          />
+        ) : (
+          <>
+            <div className={`h-full ${activeTab === 'import'    ? '' : 'hidden'}`}>
+              <TabImport onGenerate={handleGenerate} isGenerating={isGenerating} resultMsg={resultMsg} goalJob={goalJob} setGoalJob={setGoalJob} />
+            </div>
+            <div className={`h-full ${activeTab === 'manual'    ? '' : 'hidden'}`}>
+              <TabManual onGenerate={handleGenerate} isGenerating={isGenerating} resultMsg={resultMsg} />
+            </div>
+            <div className={`h-full ${activeTab === 'templates' ? '' : 'hidden'}`}>
+              <TabTemplates templates={templates} selectedTpl={selectedTpl} setSelectedTpl={setSelectedTpl} goalJob={goalJob} setGoalJob={setGoalJob} />
+            </div>
+            <div className={`h-full ${activeTab === 'api'       ? '' : 'hidden'}`}>
+              <TabAPI currentKey={apiKeyMask} onSave={handleSaveKey} showNotification={showToast} />
+            </div>
+          </>
+        )}
         {isGenerating && <LoadingOverlay />}
       </main>
 

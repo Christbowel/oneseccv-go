@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { SelectFile, ExtractFileText } from '../../wailsjs/go/main/App'
+import { useState, useRef } from 'react'
 
 export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob, setGoalJob }) {
   const [fileName, setFileName]       = useState('')
@@ -7,19 +6,20 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
   const [extracted, setExtracted]     = useState('')
   const [instruction, setInstruction] = useState('')
   const [extractError, setExtractError] = useState('')
+  const fileRef = useRef(null)
 
-  const handleImport = async () => {
+  const handleImport = async (e) => {
+    const file = e?.target?.files?.[0]
+    if (!file) return
+    setFileName(file.name)
+    setExtractError('')
+    setExtracted('')
+    setExtracting(true)
     try {
-      const path = await SelectFile('document')
-      if (!path) return
-      setFileName(path.split(/[\\/]/).pop())
-      setExtractError('')
-      setExtracted('')
-      setExtracting(true)
-      const text = await ExtractFileText(path)
+      const text = await readFileAsText(file)
       setExtracted(text)
-    } catch (e) {
-      setExtractError(String(e))
+    } catch (err) {
+      setExtractError(String(err))
     } finally {
       setExtracting(false)
     }
@@ -28,33 +28,25 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
   const canGenerate = extracted && !isGenerating
 
   const inputStyle = {
-    background: '#080C18',
-    border: '1.5px solid #2A3050',
-    borderRadius: 8,
-    color: '#E8EAF0',
-    width: '100%',
-    padding: '10px 14px',
-    fontSize: 13,
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    resize: 'none',
+    background: '#080C18', border: '1.5px solid #2A3050', borderRadius: 8,
+    color: '#E8EAF0', width: '100%', padding: '10px 14px', fontSize: 13,
+    outline: 'none', transition: 'border-color 0.2s', resize: 'none',
     fontFamily: 'DM Sans, sans-serif',
   }
 
   return (
     <div className="h-full flex flex-col overflow-hidden p-6 gap-5">
+      <input ref={fileRef} type="file" accept=".txt,.pdf,.docx,.doc" onChange={handleImport} className="hidden" />
 
       {/* ── Drop zone ── */}
       <div>
         <p className="label">CV Source</p>
-        <button onClick={handleImport} disabled={isGenerating}
+        <button onClick={() => fileRef.current?.click()} disabled={isGenerating}
           className="w-full rounded-xl p-6 text-center transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             border: fileName ? '2px dashed rgba(255,107,26,0.6)' : '2px dashed #2A3050',
             background: fileName ? 'rgba(255,107,26,0.06)' : 'rgba(8,12,24,0.5)',
-          }}
-          onMouseEnter={e => { if (!fileName) e.currentTarget.style.borderColor = 'rgba(255,107,26,0.35)' }}
-          onMouseLeave={e => { if (!fileName) e.currentTarget.style.borderColor = '#2A3050' }}>
+          }}>
           {extracting ? (
             <div className="flex flex-col items-center gap-2">
               <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'rgba(255,107,26,0.3)', borderTopColor: '#FF6B1A' }} />
@@ -70,7 +62,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
             <div className="flex flex-col items-center gap-2">
               <span className="text-3xl opacity-30">⬆</span>
               <p className="text-sm font-semibold text-white">Import existing CV</p>
-              <p className="text-xs" style={{ color: '#8892B0' }}>PDF, DOCX or TXT</p>
+              <p className="text-xs" style={{ color: '#8892B0' }}>TXT file (PDF/DOCX: copy-paste text in Manual tab)</p>
             </div>
           )}
         </button>
@@ -94,41 +86,28 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
       {/* ── Job goal ── */}
       <div>
         <label className="label">🎯 Target Position</label>
-        <input
-          type="text"
-          placeholder="e.g. Senior Go Developer, Cybersecurity Engineer, Data Scientist..."
-          value={goalJob}
-          onChange={e => setGoalJob(e.target.value)}
-          disabled={isGenerating}
+        <input type="text" placeholder="e.g. Senior Go Developer, Cybersecurity Engineer..."
+          value={goalJob} onChange={e => setGoalJob(e.target.value)} disabled={isGenerating}
           style={inputStyle}
           onFocus={e => e.target.style.borderColor = '#FF6B1A'}
-          onBlur={e => e.target.style.borderColor = '#2A3050'}
-        />
+          onBlur={e => e.target.style.borderColor = '#2A3050'} />
       </div>
 
       {/* ── AI instructions ── */}
       <div className="flex-1 flex flex-col min-h-0">
         <label className="label">💡 AI Instructions</label>
-        <textarea
-          rows={4}
-          placeholder="e.g. Highlight backend skills and open source projects, keep it concise, use a professional tone..."
-          value={instruction}
-          onChange={e => setInstruction(e.target.value)}
-          disabled={isGenerating}
+        <textarea rows={4}
+          placeholder="e.g. Highlight backend skills and open source projects, keep it concise..."
+          value={instruction} onChange={e => setInstruction(e.target.value)} disabled={isGenerating}
           style={{ ...inputStyle, resize: 'none', flex: 1 }}
           onFocus={e => e.target.style.borderColor = '#FF6B1A'}
-          onBlur={e => e.target.style.borderColor = '#2A3050'}
-        />
+          onBlur={e => e.target.style.borderColor = '#2A3050'} />
       </div>
 
       {/* ── Generate button ── */}
       <button onClick={() => onGenerate(extracted, instruction)} disabled={!canGenerate}
         className="w-full py-4 rounded-lg font-bold text-sm tracking-widest uppercase transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{
-          background: canGenerate ? '#FF6B1A' : '#FF6B1A',
-          color: '#fff',
-          boxShadow: canGenerate ? '0 0 25px rgba(255,107,26,0.4)' : 'none',
-        }}>
+        style={{ background: '#FF6B1A', color: '#fff', boxShadow: canGenerate ? '0 0 25px rgba(255,107,26,0.4)' : 'none' }}>
         {isGenerating ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
@@ -137,10 +116,18 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
         ) : '⚡ GENERATE WITH AI'}
       </button>
 
-      {/* ── Result ── */}
       {resultMsg && !isGenerating && <ResultBanner type={resultMsg.type} text={resultMsg.text} />}
     </div>
   )
+}
+
+async function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsText(file)
+  })
 }
 
 function ResultBanner({ type, text }) {

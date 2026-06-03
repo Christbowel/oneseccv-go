@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const STEPS = [
-  { icon: '🤖', text: 'Analyse des données par l\'IA...', sub: 'Lecture et compréhension de votre profil' },
+  { icon: '🤖', text: "Analyse des données par l'IA...", sub: 'Lecture et compréhension de votre profil' },
   { icon: '✍️', text: 'Rédaction du code LaTeX...', sub: 'Gemini génère votre CV personnalisé' },
   { icon: '🎨', text: 'Mise en forme du template...', sub: 'Application du style sélectionné' },
   { icon: '⚙️', text: 'Compilation pdflatex...', sub: 'Conversion en fichier PDF' },
@@ -41,22 +41,21 @@ export default function LoadingOverlay() {
           <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center glow-orange"
             style={{ background: 'rgba(255,107,26,0.12)', border: '1px solid rgba(255,107,26,0.35)' }}>
             <span className="text-2xl">{step.icon}</span>
-            {/* Spinner */}
             <div className="absolute inset-0 rounded-2xl border-2 border-transparent animate-spin"
               style={{ borderTopColor: '#FF6B1A' }} />
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="text-center font-display font-bold text-white text-xl mb-0.5 tracking-tight">1SecCV</h2>
+        <h2 className="text-center font-bold text-white text-xl mb-0.5 tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>1SecCV</h2>
         <p className="text-center font-mono text-xs mb-6 tracking-widest uppercase" style={{ color: '#FF6B1A' }}>
           Moteur IA en cours
         </p>
 
         {/* Step text */}
         <div className="text-center mb-2 min-h-[3rem] flex flex-col items-center justify-center">
-          <p className="font-display font-semibold text-white text-sm">
-            {step.text}{'.' .repeat(dots)}
+          <p className="font-semibold text-white text-sm" style={{ fontFamily: 'Syne, sans-serif' }}>
+            {step.text}{'.'.repeat(dots)}
           </p>
           <p className="font-mono text-xs mt-1" style={{ color: '#8892B0' }}>{step.sub}</p>
         </div>
