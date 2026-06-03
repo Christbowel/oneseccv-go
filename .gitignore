@@ -1,36 +1,37 @@
-# Go
-*.exe
-*.dll
-*.so
-*.dylib
-bin/
-build/bin/
-
-# Wails
-frontend/dist/
-frontend/node_modules/
-
-# Installer artifacts
-installer/*.wixobj
-installer/*.wixpdb
-installer/*.msi
-
-# Output CV files
-output/
-
-# API key
+# ── Secrets & Env ────────────────────────────────────────────
 .env
+.env.*
+!.env.example
 
-# Go workspace
-go.work
-go.work.sum
+# ── Build ────────────────────────────────────────────────────
+/build/bin/
+/backend/oneseccv-server
+oneseccv-server
 
-# IDE
+# ── Temp / Output ────────────────────────────────────────────
+/output/
+*.pdf
+*.png
+debug.log
+*.log
+
+# ── Go ───────────────────────────────────────────────────────
+/vendor/
+
+# ── Node (frontend) ─────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+
+# ── Docker ───────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── IDE ──────────────────────────────────────────────────────
 .vscode/
 .idea/
-*.code-workspace
-
-# OS
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
-desktop.ini
