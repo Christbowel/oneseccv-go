@@ -252,3 +252,55 @@ func (c *Compiler) GetTemplate(name string) (string, error) {
 	}
 	return string(data), nil
 }
+
+// ExtractText extracts text from PDF, DOCX, or TXT files.
+func (c *Compiler) ExtractText(ctx context.Context, data []byte, ext string) (string, error) {
+	workDir, err := c.createWorkDir()
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(workDir)
+
+	inputPath := filepath.Join(workDir, "input"+ext)
+	if err := os.WriteFile(inputPath, data, 0600); err != nil {
+		return "", fmt.Errorf("failed to write uploaded file: %w", err)
+	}
+
+	var text string
+
+	switch ext {
+	case ".pdf":
+		timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(timeoutCtx, "pdftotext", "-layout", inputPath, "-")
+		cmd.Dir = workDir
+		out, err := cmd.Output()
+		if err != nil {
+			return "", fmt.Errorf("pdftotext failed: %w", err)
+		}
+		text = string(out)
+
+	case ".docx", ".doc":
+		timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(timeoutCtx, "pandoc", "-t", "plain", inputPath)
+		cmd.Dir = workDir
+		out, err := cmd.Output()
+		if err != nil {
+			return "", fmt.Errorf("pandoc failed: %w", err)
+		}
+		text = string(out)
+
+	case ".txt", ".text", ".md":
+		text = string(data)
+
+	default:
+		return "", fmt.Errorf("unsupported file type: %s (use PDF, DOCX, or TXT)", ext)
+	}
+
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return "", fmt.Errorf("no text extracted from file")
+	}
+	return text, nil
+}

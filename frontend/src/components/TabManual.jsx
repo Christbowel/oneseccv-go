@@ -16,7 +16,7 @@ const inputStyle = {
   background: '#080C18',
   border: '1.5px solid #2A3050',
   borderRadius: 8,
-  color: '#E8EAF0',
+  color: '#F5F5F5',
   width: '100%',
   padding: '10px 14px',
   fontSize: 13,
@@ -48,7 +48,7 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
       <div className="shrink-0 px-6 pt-4 pb-3">
         <div className="flex items-center justify-between mb-2">
           <p className="label" style={{ marginBottom: 0 }}>Manual Form</p>
-          <span className="font-mono text-xs" style={{ color: '#8892B0' }}>{filledCount}/{FIELDS.length} sections filled</span>
+          <span className="font-mono text-xs" style={{ color: '#A0A8C0' }}>{filledCount}/{FIELDS.length} sections filled</span>
         </div>
         <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1A2040' }}>
           <div className="h-full rounded-full transition-all duration-300"
@@ -112,7 +112,7 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
           ) : '✨ GENERATE WITH AI'}
         </button>
         {filledCount < 2 && (
-          <p className="text-center font-mono text-xs" style={{ color: '#3A4060' }}>Fill at least 2 sections to generate</p>
+          <p className="text-center font-mono text-xs" style={{ color: '#5A6280' }}>Fill at least 2 sections to generate</p>
         )}
       </div>
     </div>

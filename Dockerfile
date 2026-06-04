@@ -14,7 +14,8 @@ FROM debian:bookworm-slim
 
 RUN groupadd -r oneseccv && useradd -r -g oneseccv -m -d /app oneseccv
 
-# Install TeX Live (scheme-basic + needed packages) and poppler-utils for pdftoppm
+# Install TeX Live (scheme-basic + needed packages) and poppler-utils \
+        pandoc for pdftoppm
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -26,6 +27,7 @@ RUN apt-get update && \
         texlive-font-utils \
         lmodern \
         poppler-utils \
+        pandoc \
         fontconfig && \
     rm -rf /var/lib/apt/lists/* && \
     fc-cache -f

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { extractFile } from '../api/compiler'
 
 export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob, setGoalJob }) {
   const [fileName, setFileName]       = useState('')
@@ -16,10 +17,10 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
     setExtracted('')
     setExtracting(true)
     try {
-      const text = await readFileAsText(file)
+      const text = await extractFile(file)
       setExtracted(text)
     } catch (err) {
-      setExtractError(String(err))
+      setExtractError(String(err?.message || err))
     } finally {
       setExtracting(false)
     }
@@ -29,7 +30,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
 
   const inputStyle = {
     background: '#080C18', border: '1.5px solid #2A3050', borderRadius: 8,
-    color: '#E8EAF0', width: '100%', padding: '10px 14px', fontSize: 13,
+    color: '#F5F5F5', width: '100%', padding: '10px 14px', fontSize: 13,
     outline: 'none', transition: 'border-color 0.2s', resize: 'none',
     fontFamily: 'DM Sans, sans-serif',
   }
@@ -50,19 +51,19 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
           {extracting ? (
             <div className="flex flex-col items-center gap-2">
               <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'rgba(255,107,26,0.3)', borderTopColor: '#FF6B1A' }} />
-              <p className="text-sm" style={{ color: '#8892B0' }}>Extracting text...</p>
+              <p className="text-sm" style={{ color: '#A0A8C0' }}>Extracting text...</p>
             </div>
           ) : fileName ? (
             <div className="flex flex-col items-center gap-1.5">
               <span className="text-2xl">📄</span>
               <p className="text-sm font-mono" style={{ color: '#FF8C42' }}>{fileName}</p>
-              <p className="text-xs" style={{ color: '#8892B0' }}>Click to change file</p>
+              <p className="text-xs" style={{ color: '#A0A8C0' }}>Click to change file</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
               <span className="text-3xl opacity-30">⬆</span>
               <p className="text-sm font-semibold text-white">Import existing CV</p>
-              <p className="text-xs" style={{ color: '#8892B0' }}>TXT file (PDF/DOCX: copy-paste text in Manual tab)</p>
+              <p className="text-xs" style={{ color: '#A0A8C0' }}>PDF, DOCX, or TXT</p>
             </div>
           )}
         </button>
@@ -119,15 +120,6 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg, goalJob
       {resultMsg && !isGenerating && <ResultBanner type={resultMsg.type} text={resultMsg.text} />}
     </div>
   )
-}
-
-async function readFileAsText(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsText(file)
-  })
 }
 
 function ResultBanner({ type, text }) {

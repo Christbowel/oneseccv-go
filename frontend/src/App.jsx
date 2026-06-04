@@ -77,7 +77,7 @@ export default function App() {
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-          const preview = await compilePreview(currentSource, 300)
+          const preview = await compilePreview(currentSource)
           setTypstSource(currentSource)
           setPreviewPages(preview.pages)
           setShowPreview(true)
@@ -110,7 +110,7 @@ export default function App() {
     setPreviewLoading(true)
     try {
       const source = await generateCV(apiKey, `CURRENT CV SOURCE:\n${typstSource}`, `MODIFICATION: ${instruction}`, '', '')
-      const preview = await compilePreview(source, 300)
+      const preview = await compilePreview(source)
       setTypstSource(source)
       setPreviewPages(preview.pages)
       showToast('success', 'Changes applied!')
@@ -195,7 +195,7 @@ export default function App() {
           <CVPreview
             pages={previewPages}
             onDownload={handleDownload}
-            onRefine={handleRefine}
+            
             loading={previewLoading}
           />
         ) : (

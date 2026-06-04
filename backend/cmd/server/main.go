@@ -49,7 +49,9 @@ func main() {
 	mux.HandleFunc("/api/v1/compile/pdf", h.CompilePDFDirect)
 	mux.HandleFunc("/api/v1/preview", h.Preview)
 	mux.HandleFunc("/api/v1/templates", h.ListTemplates)
+	mux.HandleFunc("/api/v1/extract", h.Extract)
 	mux.HandleFunc("/api/v1/template", h.GetTemplate)
+	mux.HandleFunc("/api/v1/extract", h.Extract)
 
 	origins := strings.Split(*allowedOrigins, ",")
 	for i := range origins { origins[i] = strings.TrimSpace(origins[i]) }

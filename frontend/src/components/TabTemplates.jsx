@@ -1,6 +1,6 @@
 const inputStyle = {
   background: '#080C18', border: '1.5px solid #2A3050', borderRadius: 8,
-  color: '#E8EAF0', width: '100%', padding: '10px 14px', fontSize: 13,
+  color: '#F5F5F5', width: '100%', padding: '10px 14px', fontSize: 13,
   outline: 'none', transition: 'border-color 0.2s', fontFamily: 'DM Sans, sans-serif',
 }
 
@@ -15,22 +15,22 @@ export default function TabTemplates({ templates, selectedTpl, setSelectedTpl, g
         style={{ borderRight: '1px solid #1A2040', background: 'rgba(8,12,24,0.5)' }}>
         <div className="p-4" style={{ borderBottom: '1px solid #1A2040' }}>
           <p className="label" style={{ marginBottom: 4 }}>Style</p>
-          <p className="text-xs" style={{ color: '#8892B0' }}>Choose a CV design</p>
+          <p className="text-xs" style={{ color: '#A0A8C0' }}>Choose a CV design</p>
         </div>
 
         <nav className="p-2 flex flex-col gap-1">
           {templates.length === 0 ? (
-            <p className="p-4 text-xs text-center" style={{ color: '#8892B0' }}>Loading templates...</p>
+            <p className="p-4 text-xs text-center" style={{ color: '#A0A8C0' }}>Loading templates...</p>
           ) : templates.map(tpl => (
             <button key={tpl.slug} onClick={() => setSelectedTpl(tpl.slug)}
               className="w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150"
               style={{
                 background: tpl.slug === selectedTpl ? 'rgba(255,107,26,0.12)' : 'transparent',
                 border: tpl.slug === selectedTpl ? '1px solid rgba(255,107,26,0.35)' : '1px solid transparent',
-                color: tpl.slug === selectedTpl ? '#fff' : '#8892B0',
+                color: tpl.slug === selectedTpl ? '#fff' : '#A0A8C0',
                 boxShadow: tpl.slug === selectedTpl ? '0 0 12px rgba(255,107,26,0.1)' : 'none',
               }}>
-              <span className="mr-2 text-xs" style={{ color: tpl.slug === selectedTpl ? '#FF6B1A' : '#3A4060' }}>▸</span>
+              <span className="mr-2 text-xs" style={{ color: tpl.slug === selectedTpl ? '#FF6B1A' : '#5A6280' }}>▸</span>
               {tpl.name}
             </button>
           ))}
@@ -46,10 +46,10 @@ export default function TabTemplates({ templates, selectedTpl, setSelectedTpl, g
             style={{ background: '#080C18', border: '1.5px solid #2A3050' }}>
             <div className="text-center py-12">
               <div className="text-4xl mb-3 opacity-20">📄</div>
-              <p className="text-sm" style={{ color: '#8892B0' }}>
+              <p className="text-sm" style={{ color: '#A0A8C0' }}>
                 {selected ? `Template: ${selected.name}` : 'Select a template'}
               </p>
-              <p className="font-mono text-xs mt-1" style={{ color: '#3A4060' }}>
+              <p className="font-mono text-xs mt-1" style={{ color: '#5A6280' }}>
                 Preview will appear after generation
               </p>
             </div>

@@ -57,13 +57,13 @@ export default function LoadingOverlay() {
           <p className="font-semibold text-white text-sm" style={{ fontFamily: 'Syne, sans-serif' }}>
             {step.text}{'.'.repeat(dots)}
           </p>
-          <p className="font-mono text-xs mt-1" style={{ color: '#8892B0' }}>{step.sub}</p>
+          <p className="font-mono text-xs mt-1" style={{ color: '#A0A8C0' }}>{step.sub}</p>
         </div>
 
         {/* Progress bar */}
         <div className="mt-6 mb-3">
           <div className="flex justify-between mb-1.5">
-            <span className="font-mono text-xs" style={{ color: '#3A4060' }}>Progression</span>
+            <span className="font-mono text-xs" style={{ color: '#5A6280' }}>Progression</span>
             <span className="font-mono text-xs" style={{ color: '#FF6B1A' }}>{Math.round(progress)}%</span>
           </div>
           <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1A2040' }}>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 const inputStyle = {
   background: '#080C18', border: '1.5px solid #2A3050', borderRadius: 8,
-  color: '#E8EAF0', width: '100%', padding: '10px 14px', fontSize: 13,
+  color: '#F5F5F5', width: '100%', padding: '10px 14px', fontSize: 13,
   outline: 'none', transition: 'border-color 0.2s',
   fontFamily: 'JetBrains Mono, monospace', paddingRight: 44,
 }
@@ -30,7 +30,7 @@ export default function TabAPI({ currentKey, onSave, showNotification }) {
         <div>
           <p className="label">Configuration</p>
           <h2 className="font-bold text-2xl text-white" style={{ fontFamily: 'Syne, sans-serif' }}>AI Engine Settings</h2>
-          <p className="text-sm mt-1" style={{ color: '#8892B0' }}>
+          <p className="text-sm mt-1" style={{ color: '#A0A8C0' }}>
             OneSecCV uses Gemini to generate your Typst code. Your key is stored locally in your browser only.
           </p>
         </div>
@@ -41,7 +41,7 @@ export default function TabAPI({ currentKey, onSave, showNotification }) {
             <span className="w-2 h-2 rounded-full animate-pulse-slow" style={{ background: '#10B981', flexShrink: 0 }} />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white">Active key</p>
-              <p className="font-mono text-xs truncate mt-0.5" style={{ color: '#8892B0' }}>{currentKey}</p>
+              <p className="font-mono text-xs truncate mt-0.5" style={{ color: '#A0A8C0' }}>{currentKey}</p>
             </div>
             <span className="font-mono text-xs px-2 py-1 rounded"
               style={{ color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
@@ -65,7 +65,7 @@ export default function TabAPI({ currentKey, onSave, showNotification }) {
             />
             <button type="button" onClick={() => setVisible(v => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-sm transition-colors"
-              style={{ color: '#8892B0' }}>{visible ? '🙈' : '👁'}</button>
+              style={{ color: '#A0A8C0' }}>{visible ? '🙈' : '👁'}</button>
           </div>
         </div>
 
@@ -82,13 +82,13 @@ export default function TabAPI({ currentKey, onSave, showNotification }) {
 
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px" style={{ background: '#1A2040' }} />
-          <span className="text-xs font-mono" style={{ color: '#8892B0' }}>Don't have a key?</span>
+          <span className="text-xs font-mono" style={{ color: '#A0A8C0' }}>Don't have a key?</span>
           <div className="flex-1 h-px" style={{ background: '#1A2040' }} />
         </div>
 
         <div className="p-5 rounded-xl space-y-3" style={{ background: '#080C18', border: '1.5px solid #2A3050' }}>
           <p className="font-semibold text-white text-sm">Get a free key in 2 minutes</p>
-          <ol className="space-y-2 text-sm" style={{ color: '#8892B0' }}>
+          <ol className="space-y-2 text-sm" style={{ color: '#A0A8C0' }}>
             {[
               ['01', 'Go to', 'aistudio.google.com'],
               ['02', 'Click "Get API Key" → "Create API key"', null],
@@ -107,7 +107,7 @@ export default function TabAPI({ currentKey, onSave, showNotification }) {
           </a>
         </div>
 
-        <div className="flex items-start gap-3 text-xs" style={{ color: '#3A4060' }}>
+        <div className="flex items-start gap-3 text-xs" style={{ color: '#5A6280' }}>
           <span className="shrink-0 mt-0.5">🔒</span>
           <p>Your API key is stored in your browser's local storage. It is never sent to any server other than Google's AI API.</p>
         </div>

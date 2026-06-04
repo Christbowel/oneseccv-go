@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Christbowel/oneseccv-go/backend/internal/compiler"
@@ -254,4 +255,53 @@ func slugToName(slug string) string {
 		}
 	}
 	return string(parts)
+}
+
+// Extract handles file upload and text extraction (PDF/DOCX/TXT).
+func (h *Handler) Extract(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "POST only")
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // 10 MB max
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		writeError(w, http.StatusBadRequest, "file too large or invalid form")
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "no file uploaded")
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "failed to read file")
+		return
+	}
+
+	ext := ""
+	name := header.Filename
+	if i := len(name) - 1; i > 0 {
+		for ; i >= 0; i-- {
+			if name[i] == '.' {
+				ext = name[i:]
+				break
+			}
+		}
+	}
+	ext = strings.ToLower(ext)
+
+	text, extractErr := h.compiler.ExtractText(r.Context(), data, ext)
+	if extractErr != nil {
+		writeError(w, http.StatusUnprocessableEntity, extractErr.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, struct {
+		Text string `json:"text"`
+	}{Text: text})
 }
