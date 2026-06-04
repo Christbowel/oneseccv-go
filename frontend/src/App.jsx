@@ -59,7 +59,7 @@ export default function App() {
 
   // ── Generate CV — same logic as original app.go with retry ──
   const handleGenerate = useCallback(async (userData, instruction = '') => {
-    if (!apiReady) { showToast('error', 'API key missing — configure it in ⚙ Settings'); setActiveTab('api'); return }
+    if (!apiReady) { showToast('error', 'API key missing. Configure it in ⚙ Settings'); setActiveTab('api'); return }
     if (!compilerReady) { showToast('error', 'Compilation server unreachable'); return }
     if (!selectedTpl) { showToast('error', 'No template selected'); setActiveTab('templates'); return }
 
@@ -223,7 +223,7 @@ export default function App() {
       <footer className="flex items-center justify-center px-6 py-2 shrink-0"
         style={{ background: 'rgba(8,12,24,0.7)', borderTop: '1px solid #1A2040' }}>
         <span className="font-mono text-xs text-white">
-          © 2026 OneSecCV — Designed &amp; Developed by <span style={{ color: '#FF6B1A' }}>Christ Bowel</span>
+          © 2026 OneSecCV. Designed &amp; Developed by <span style={{ color: '#FF6B1A' }}>Christ Bowel</span>
         </span>
       </footer>
     </div>

@@ -124,10 +124,10 @@ export default function CVPreview({ pages, onDownload, loading }) {
             <div className="p-4 rounded-xl mb-6"
               style={{ background: 'rgba(30,111,255,0.06)', border: '1px solid rgba(30,111,255,0.2)' }}>
               <p className="text-sm leading-relaxed" style={{ color: '#A0A8C0' }}>
-                L'éditeur visuel avec modification directe sur le CV (gras, souligné, édition de texte inline) est disponible uniquement sur la <strong style={{ color: '#5B8FFF' }}>version PC et Mobile</strong>.
+                L'editeur visuel (gras, souligne, edition de texte) est disponible uniquement sur la <strong style={{ color: '#5B8FFF' }}>version PC et Mobile</strong>.
               </p>
               <p className="text-xs mt-3" style={{ color: '#5A6280' }}>
-                Web → Régénérez votre CV avec des instructions différentes dans l'onglet Import ou Manual.
+                Sur le web, vous pouvez regenerer votre CV avec des instructions différentes dans l'onglet Import ou Manual.
               </p>
             </div>
 
