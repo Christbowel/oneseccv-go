@@ -15,6 +15,7 @@ import TabAPI         from './components/TabAPI'
 import CVPreview      from './components/CVPreview'
 import LoadingOverlay from './components/LoadingOverlay'
 import InstallPrompt  from './components/InstallPrompt'
+import Onboarding     from './components/Onboarding'
 
 import { generateCV, generateCoverLetter, fixCompileError, refineCV } from './api/gemini'
 import { compilePDF, compilePreview, getTemplate, health, listTemplates } from './lib/api'
@@ -78,6 +79,10 @@ function Workspace() {
   const [letterSource, setLetterSource]   = useState('')
   const [letterPages, setLetterPages]     = useState([])
   const [previewDoc, setPreviewDoc]       = useState('cv') // 'cv' | 'letter'
+
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !localStorage.getItem(LS.seenOnboarding),
+  )
 
   // ── Boot ──
   useEffect(() => {
@@ -407,7 +412,8 @@ function Workspace() {
       </header>
 
       {/* ── Content ── */}
-      <main className="relative min-h-0 flex-1 overflow-hidden">
+      {/* Keyed on `screen` so each navigation replays the enter animation. */}
+      <main key={screen} className="screen-enter relative min-h-0 flex-1 overflow-hidden">
         {screen === 'create' && (
           <div className="flex h-full flex-col">
             <div className="shrink-0 px-4 pt-4 sm:px-6">
@@ -472,6 +478,8 @@ function Workspace() {
       {previewPages.length > 0 && !isGenerating && screen !== 'preview' && <InstallPrompt />}
 
       <MobileNav items={navItems} active={screen} onSelect={goto} />
+
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
     </div>
   )
 }

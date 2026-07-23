@@ -147,6 +147,16 @@ header, nav, main, footer { position: relative; z-index: 1; }
 
 .animate-fade-in   { animation: fadeIn  0.3s ease-out; }
 .animate-slide-up  { animation: slideUp 0.4s ease-out; }
+
+/* ── Screen transition ── */
+@keyframes screenEnter {
+  from { opacity: 0; transform: translateY(8px) scale(0.995); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.screen-enter {
+  animation: screenEnter 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
 .animate-spin      { animation: spin 1s linear infinite; }
 .animate-pulse-slow{ animation: pulse 3s ease-in-out infinite; }
 

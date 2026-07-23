@@ -31,4 +31,5 @@ export const LS = {
   goalJob:   'oneseccv_goaljob',
   jobDesc:   'oneseccv_jobdesc',
   installDismissed: 'oneseccv_install_dismissed',
+  seenOnboarding:   'oneseccv_seen_onboarding',
 }
