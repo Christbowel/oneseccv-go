@@ -1,0 +1,36 @@
+{
+  "name": "OneSecCV — AI CV builder",
+  "short_name": "OneSecCV",
+  "description": "Paste a job offer, drop your old CV, get a typeset LaTeX PDF aimed at that role — in one second.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "orientation": "any",
+  "background_color": "#050810",
+  "theme_color": "#050810",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "business", "utilities"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "New CV",
+      "short_name": "New CV",
+      "description": "Start a CV for a new job offer",
+      "url": "/?screen=create",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My CVs",
+      "short_name": "My CVs",
+      "description": "Open your saved CVs",
+      "url": "/?screen=history",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

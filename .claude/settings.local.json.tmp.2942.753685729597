@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go version *)",
+      "Bash(npm -v)",
+      "Bash(timeout 60 go list -m all)",
+      "Bash(timeout 30 curl -sI https://proxy.golang.org/)",
+      "Bash(go vet *)",
+      "Bash(go build *)",
+      "Bash(go test *)",
+      "Skill(dataviz)",
+      "Bash(node scripts/gen-icons.mjsy)",
+      "Bash(npm run *)",
+      "Bash(npm init *)",
+      "Bash(npm i *)",
+      "Bash(node -e \"console.log\\(require\\('puppeteer-core/package.json'\\).version\\)\")",
+      "Bash(node smoke.mjs http://localhost:5199/ landing-mobile.png mobile)",
+      "Bash(node workspace.mjs mobile create)",
+      "Bash(node e2e.mjs mobile)",
+      "Bash(python3 -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('errors:',d['errors']\\);print\\('calls:',d['calls']\\);print\\('overflow:',d['state']['overflow']\\)\")",
+      "Bash(node e2e.mjs desktop)",
+      "Bash(python3 -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('desktop errors:',d['errors']\\);print\\('desktop overflow:',d['state']['overflow']\\)\")",
+      "Bash(python3 -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('e2e errors:',d['errors'] or 'none'\\);print\\('pages rendered:',d['state']['pages']\\)\")",
+      "Bash(node workspace.mjs desktop create)",
+      "Bash(python3 -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('overflow:',d['horizontalOverflow'],'| errors:',[e for e in d['errors'] if 'CORS' not in e and 'ERR_FAILED' not in e]\\)\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(pkill -f \"5188\")",
+      "Bash(git checkout *)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git add *)"
+    ]
+  }
+}

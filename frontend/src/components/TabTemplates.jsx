@@ -1,74 +1,77 @@
-const inputStyle = {
-  background: '#080C18', border: '1.5px solid #2A3050', borderRadius: 8,
-  color: '#F5F5F5', width: '100%', padding: '10px 14px', fontSize: 13,
-  outline: 'none', transition: 'border-color 0.2s', fontFamily: 'DM Sans, sans-serif',
+const DESCRIPTIONS = {
+  jake:         'The classic one-page engineering CV. Dense, ATS-proof, universally accepted.',
+  swe:          'Software-engineering focused: projects and stack get top billing.',
+  'two-column': 'Sidebar for skills and contact, main column for experience.',
+  elegant:      'Editorial serif look — stands out for design, product and research roles.',
+  render:       'Modern and airy, with generous spacing and clear section rules.',
 }
 
-export default function TabTemplates({ templates, selectedTpl, setSelectedTpl, goalJob, setGoalJob }) {
-  const selected = templates.find(t => t.slug === selectedTpl)
-
+/** Template picker: a tap-friendly grid on mobile, a comfortable grid on desktop. */
+export default function TabTemplates({ templates, selectedTpl, setSelectedTpl, onContinue }) {
   return (
-    <div className="h-full flex gap-0 overflow-hidden">
+    <div className="h-full overflow-y-auto overscroll-contain px-4 pb-8 pt-5 sm:px-6">
+      <div className="mx-auto w-full max-w-4xl">
+        <header className="mb-5">
+          <h2 className="text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: 'Syne, sans-serif' }}>
+            Pick a style
+          </h2>
+          <p className="mt-1 text-sm" style={{ color: '#A0A8C0' }}>
+            All templates compile to the same ATS-friendly LaTeX quality.
+          </p>
+        </header>
 
-      {/* ── Left: template list ── */}
-      <div className="w-52 shrink-0 flex flex-col overflow-y-auto"
-        style={{ borderRight: '1px solid #1A2040', background: 'rgba(8,12,24,0.5)' }}>
-        <div className="p-4" style={{ borderBottom: '1px solid #1A2040' }}>
-          <p className="label" style={{ marginBottom: 4 }}>Style</p>
-          <p className="text-xs" style={{ color: '#A0A8C0' }}>Choose a CV design</p>
-        </div>
-
-        <nav className="p-2 flex flex-col gap-1">
-          {templates.length === 0 ? (
-            <p className="p-4 text-xs text-center" style={{ color: '#A0A8C0' }}>Loading templates...</p>
-          ) : templates.map(tpl => (
-            <button key={tpl.slug} onClick={() => setSelectedTpl(tpl.slug)}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150"
-              style={{
-                background: tpl.slug === selectedTpl ? 'rgba(255,107,26,0.12)' : 'transparent',
-                border: tpl.slug === selectedTpl ? '1px solid rgba(255,107,26,0.35)' : '1px solid transparent',
-                color: tpl.slug === selectedTpl ? '#fff' : '#A0A8C0',
-                boxShadow: tpl.slug === selectedTpl ? '0 0 12px rgba(255,107,26,0.1)' : 'none',
-              }}>
-              <span className="mr-2 text-xs" style={{ color: tpl.slug === selectedTpl ? '#FF6B1A' : '#5A6280' }}>▸</span>
-              {tpl.name}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* ── Right: options ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        <div className="flex-1 p-5 overflow-hidden flex flex-col">
-          <p className="label">Preview</p>
-          <div className="flex-1 flex items-center justify-center rounded-xl overflow-hidden min-h-0"
-            style={{ background: '#080C18', border: '1.5px solid #2A3050' }}>
-            <div className="text-center py-12">
-              <div className="text-4xl mb-3 opacity-20">📄</div>
-              <p className="text-sm" style={{ color: '#A0A8C0' }}>
-                {selected ? `Template: ${selected.name}` : 'Select a template'}
-              </p>
-              <p className="font-mono text-xs mt-1" style={{ color: '#5A6280' }}>
-                Preview will appear after generation
-              </p>
-            </div>
+        {templates.length === 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} className="h-28 animate-pulse rounded-xl" style={{ background: '#0A0F1E' }} />
+            ))}
           </div>
-        </div>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {templates.map(tpl => {
+              const active = tpl.slug === selectedTpl
+              return (
+                <li key={tpl.slug}>
+                  <button onClick={() => setSelectedTpl(tpl.slug)}
+                    aria-pressed={active}
+                    className="w-full rounded-xl p-4 text-left transition-all duration-150 active:scale-[0.99]"
+                    style={{
+                      background: active ? 'rgba(255,107,26,0.09)' : 'rgba(8,12,24,0.7)',
+                      border: active ? '1.5px solid rgba(255,107,26,0.5)' : '1.5px solid #1A2040',
+                      boxShadow: active ? '0 0 22px rgba(255,107,26,0.12)' : 'none',
+                    }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
+                          {tpl.name}
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed" style={{ color: '#A0A8C0' }}>
+                          {DESCRIPTIONS[tpl.slug] || 'A clean, professional LaTeX layout.'}
+                        </p>
+                      </div>
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]"
+                        style={{
+                          border: `1.5px solid ${active ? '#FF6B1A' : '#2A3050'}`,
+                          background: active ? '#FF6B1A' : 'transparent',
+                          color: '#fff',
+                        }}>
+                        {active ? '✓' : ''}
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
 
-        <div className="shrink-0 p-5 space-y-4" style={{ borderTop: '1px solid #1A2040', background: 'rgba(8,12,24,0.6)' }}>
-          <div>
-            <label className="label">🎯 Target Position</label>
-            <input type="text"
-              placeholder="e.g. Cybersecurity Engineer, Data Scientist, Cloud Architect..."
-              value={goalJob}
-              onChange={e => setGoalJob(e.target.value)}
-              style={inputStyle}
-              onFocus={e => e.target.style.borderColor = '#FF6B1A'}
-              onBlur={e => e.target.style.borderColor = '#2A3050'}
-            />
-          </div>
-        </div>
+        {onContinue && templates.length > 0 && (
+          <button onClick={onContinue}
+            className="mt-6 w-full rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] lg:w-auto lg:px-10"
+            style={{ background: '#FF6B1A', color: '#fff', boxShadow: '0 0 22px rgba(255,107,26,0.35)' }}>
+            Continue →
+          </button>
+        )}
       </div>
     </div>
   )

@@ -1,144 +1,158 @@
 import { useState } from 'react'
 
-export default function CVPreview({ pages, onDownload, loading }) {
+const QUICK_EDITS = [
+  'Make it fit on a single page',
+  'Make the bullets more concrete and quantified',
+  'Translate the whole CV to French',
+  'Emphasise the skills the job description asks for',
+]
+
+export default function CVPreview({ pages, onDownload, onRefine, loading, canRefine }) {
   const [zoom, setZoom] = useState(100)
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [sheet, setSheet] = useState(false)
+  const [instruction, setInstruction] = useState('')
+
+  const submitRefine = async (text) => {
+    const value = (text ?? instruction).trim()
+    if (!value) return
+    setSheet(false)
+    setInstruction('')
+    await onRefine(value)
+  }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
 
-      {/* ── Top bar: zoom + actions ── */}
-      <div className="shrink-0 flex items-center justify-between px-5 py-3"
+      {/* ── Toolbar ── */}
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-2 sm:px-5 sm:py-3"
         style={{ background: 'rgba(8,12,24,0.95)', borderBottom: '1px solid #1A2040' }}>
 
-        {/* Left: page count */}
-        <span className="font-mono text-xs" style={{ color: '#A0A8C0' }}>
+        <span className="shrink-0 font-mono text-xs" style={{ color: '#A0A8C0' }}>
           {pages.length} page{pages.length > 1 ? 's' : ''}
         </span>
 
-        {/* Center: zoom controls */}
-        <div className="flex items-center gap-2">
-          <button onClick={() => setZoom(Math.max(50, zoom - 25))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all duration-200"
-            style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#F5F5F5' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#FF6B1A'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = '#1A2040'}>
-            −
-          </button>
-
-          <div className="flex items-center gap-1">
-            {[50, 75, 100, 125, 150].map(v => (
+        {/* Zoom — compact on mobile */}
+        <div className="flex items-center gap-1.5">
+          <ZoomButton label="−" onClick={() => setZoom(z => Math.max(50, z - 25))} />
+          <span className="w-11 text-center font-mono text-xs" style={{ color: '#FF6B1A' }}>{zoom}%</span>
+          <ZoomButton label="+" onClick={() => setZoom(z => Math.min(200, z + 25))} />
+          <div className="ml-1 hidden items-center gap-1 lg:flex">
+            {[75, 100, 150].map(v => (
               <button key={v} onClick={() => setZoom(v)}
-                className="px-2.5 py-1 rounded text-xs font-mono transition-all duration-200"
+                className="rounded px-2 py-1 font-mono text-xs transition-all"
                 style={{
                   background: zoom === v ? 'rgba(255,107,26,0.15)' : 'transparent',
-                  border: zoom === v ? '1px solid rgba(255,107,26,0.4)' : '1px solid transparent',
+                  border: `1px solid ${zoom === v ? 'rgba(255,107,26,0.4)' : 'transparent'}`,
                   color: zoom === v ? '#FF6B1A' : '#A0A8C0',
                 }}>
                 {v}%
               </button>
             ))}
           </div>
-
-          <button onClick={() => setZoom(Math.min(200, zoom + 25))}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all duration-200"
-            style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#F5F5F5' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#FF6B1A'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = '#1A2040'}>
-            +
-          </button>
         </div>
 
-        {/* Right: actions */}
-        <div className="flex items-center gap-3">
-          <button onClick={() => setShowEditModal(true)}
-            className="px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase transition-all duration-200"
-            style={{ background: 'rgba(30,111,255,0.12)', border: '1px solid rgba(30,111,255,0.35)', color: '#5B8FFF' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#5B8FFF'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(30,111,255,0.35)'}>
-            ✏ EDIT
+        <div className="flex shrink-0 items-center gap-2">
+          <button onClick={() => setSheet(true)} disabled={!canRefine || loading}
+            className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
+            style={{ background: 'rgba(30,111,255,0.12)', border: '1px solid rgba(30,111,255,0.35)', color: '#5B8FFF' }}>
+            ✏ <span className="hidden sm:inline">Refine</span>
           </button>
-
           <button onClick={onDownload} disabled={loading}
-            className="px-5 py-2 rounded-lg font-bold text-xs tracking-widest uppercase transition-all duration-200 active:scale-95 disabled:opacity-40 glow-orange"
+            className="hidden rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-40 lg:block"
             style={{ background: '#FF6B1A', color: '#fff' }}>
-            ↓ DOWNLOAD PDF
+            ↓ PDF
           </button>
         </div>
       </div>
 
       {/* ── Pages ── */}
-      <div className="flex-1 overflow-auto p-8" style={{ background: '#0A0F1E' }}>
+      <div className="relative min-h-0 flex-1 overflow-auto overscroll-contain p-4 sm:p-8"
+        style={{ background: '#0A0F1E' }}>
         {loading && (
-          <div className="fixed inset-0 z-30 flex items-center justify-center"
-            style={{ background: 'rgba(5,8,16,0.75)' }}>
+          <div className="fixed inset-0 z-30 flex items-center justify-center" style={{ background: 'rgba(5,8,16,0.78)' }}>
             <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-t-transparent animate-spin rounded-full"
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
                 style={{ borderColor: 'rgba(255,107,26,0.3)', borderTopColor: '#FF6B1A' }} />
-              <p className="font-mono text-xs" style={{ color: '#FF6B1A' }}>Compiling...</p>
+              <p className="font-mono text-xs" style={{ color: '#FF6B1A' }}>Compiling…</p>
             </div>
           </div>
         )}
 
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-5">
           {pages.map((pageB64, i) => (
-            <div key={i} className="cv-page"
-              style={{
-                width: `${(595 * zoom) / 100}px`,
-                maxWidth: '95vw',
-              }}>
-              <img
-                src={`data:image/png;base64,${pageB64}`}
-                alt={`Page ${i + 1}`}
-                className="w-full h-auto block"
-                style={{ imageRendering: 'auto' }}
-                draggable={false}
-              />
+            <div key={i} className="cv-page" style={{ width: `${(595 * zoom) / 100}px`, maxWidth: '100%' }}>
+              <img src={`data:image/png;base64,${pageB64}`} alt={`Page ${i + 1}`}
+                className="block h-auto w-full" draggable={false} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Edit modal ── */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
-          style={{ background: 'rgba(5,8,16,0.85)' }}
-          onClick={() => setShowEditModal(false)}>
-          <div className="rounded-2xl p-8 max-w-md w-full mx-4 animate-slide-up"
-            style={{ background: '#080C18', border: '1px solid #1A2040', boxShadow: '0 0 60px rgba(0,0,0,0.5)' }}
+      {/* ── Mobile download bar ── */}
+      <div className="shrink-0 px-4 py-3 lg:hidden"
+        style={{ borderTop: '1px solid #1A2040', background: 'rgba(8,12,24,0.9)' }}>
+        <button onClick={onDownload} disabled={loading}
+          className="w-full rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40"
+          style={{ background: '#FF6B1A', color: '#fff', boxShadow: '0 0 22px rgba(255,107,26,0.35)' }}>
+          ↓ Download PDF
+        </button>
+      </div>
+
+      {/* ── Refine sheet ── */}
+      {sheet && (
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+          style={{ background: 'rgba(5,8,16,0.85)' }} onClick={() => setSheet(false)}>
+          <div className="animate-slide-up w-full max-w-md rounded-t-2xl p-5 sm:rounded-2xl sm:p-6"
+            style={{ background: '#080C18', border: '1px solid #1A2040', paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
             onClick={e => e.stopPropagation()}>
 
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(30,111,255,0.12)', border: '1px solid rgba(30,111,255,0.3)' }}>
-                <span className="text-lg">✏️</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg" style={{ fontFamily: 'Syne, sans-serif', color: '#F5F5F5' }}>
-                  Visual Editor
-                </h3>
-                <p className="text-xs" style={{ color: '#A0A8C0' }}>Word-like editing</p>
-              </div>
+            <h3 className="mb-1 text-lg font-bold" style={{ fontFamily: 'Syne, sans-serif', color: '#F5F5F5' }}>
+              Refine your CV
+            </h3>
+            <p className="mb-4 text-sm" style={{ color: '#A0A8C0' }}>
+              Describe the change in plain words — the AI rewrites and recompiles.
+            </p>
+
+            <div className="mb-3 flex flex-wrap gap-2">
+              {QUICK_EDITS.map(q => (
+                <button key={q} onClick={() => submitRefine(q)}
+                  className="rounded-full px-3 py-1.5 text-left text-xs transition-colors active:scale-95"
+                  style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
+                  {q}
+                </button>
+              ))}
             </div>
 
-            <div className="p-4 rounded-xl mb-6"
-              style={{ background: 'rgba(30,111,255,0.06)', border: '1px solid rgba(30,111,255,0.2)' }}>
-              <p className="text-sm leading-relaxed" style={{ color: '#A0A8C0' }}>
-                L'editeur visuel (gras, souligne, edition de texte) est disponible uniquement sur la <strong style={{ color: '#5B8FFF' }}>version PC et Mobile</strong>.
-              </p>
-              <p className="text-xs mt-3" style={{ color: '#5A6280' }}>
-                Sur le web, vous pouvez regenerer votre CV avec des instructions différentes dans l'onglet Import ou Manual.
-              </p>
-            </div>
+            <textarea rows={3} autoFocus value={instruction} onChange={e => setInstruction(e.target.value)}
+              placeholder="e.g. move the projects section above education"
+              className="textarea-field w-full" />
 
-            <button onClick={() => setShowEditModal(false)}
-              className="w-full py-3 rounded-lg font-bold text-sm tracking-widest uppercase transition-all duration-200"
-              style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
-              COMPRIS
-            </button>
+            <div className="mt-4 flex gap-3">
+              <button onClick={() => setSheet(false)}
+                className="rounded-lg px-4 py-3 text-sm"
+                style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
+                Cancel
+              </button>
+              <button onClick={() => submitRefine()} disabled={!instruction.trim()}
+                className="flex-1 rounded-lg py-3 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40"
+                style={{ background: '#FF6B1A', color: '#fff' }}>
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+function ZoomButton({ label, onClick }) {
+  return (
+    <button onClick={onClick}
+      aria-label={label === '+' ? 'Zoom in' : 'Zoom out'}
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold transition-all active:scale-95"
+      style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#F5F5F5' }}>
+      {label}
+    </button>
   )
 }
