@@ -4,9 +4,9 @@ import { useAuth } from '../auth/AuthProvider'
 import { APP_NAME } from '../config'
 
 const STEPS = [
-  { icon: '📄', title: 'Import or type',   body: 'Drop your old CV (PDF, DOCX, TXT) or fill the guided form.' },
-  { icon: '📋', title: 'Paste the offer',  body: 'Copy the job description in — the AI mirrors its wording and priorities.' },
-  { icon: '⚡', title: 'LaTeX in 1 second', body: 'Compiled into a pixel-perfect, ATS-friendly PDF you can download.' },
+  { icon: '📋', title: 'Paste the offer',   body: 'Copy the job description in — the AI mirrors its wording and priorities.' },
+  { icon: '📄', title: 'Drop your CV',      body: 'Import a PDF, DOCX or TXT, or fill the guided form.' },
+  { icon: '⚡', title: 'CV + letter in 1s', body: 'A typeset LaTeX PDF and a matching cover letter, ready to send.' },
 ]
 
 const PERKS = [
@@ -20,76 +20,84 @@ export default function Landing() {
   const { error } = useAuth()
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-y-auto" style={{ background: '#050810' }}>
+    // h-full + overflow-y-auto: the scroll happens INSIDE this box, which
+    // exactly matches #root's height — so the whole page is always reachable
+    // on mobile (the global overflow:hidden used to clip it).
+    <div className="relative h-full w-full overflow-y-auto" style={{ background: '#050810' }}>
       <StarCanvas />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-lg flex-col px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))] lg:max-w-5xl lg:pt-16">
+      <div className="relative z-10 mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] sm:px-6">
 
-        {/* ── Hero ── */}
-        <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <Logo />
+        {/* ── Fold: hero (left) + sign-in (right) on desktop ── */}
+        <div className="flex flex-1 flex-col justify-center lg:grid lg:grid-cols-2 lg:items-center lg:gap-14 lg:py-6">
 
-          <h1 className="mt-7 text-[2.1rem] font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl"
-            style={{ fontFamily: 'Syne, sans-serif' }}>
-            A CV that gets<br />
-            <span style={{ color: '#FF6B1A' }}>callbacks</span> — in one second.
-          </h1>
+          {/* Hero */}
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+            <Logo />
 
-          <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed" style={{ color: '#A0A8C0' }}>
-            Paste the job offer, drop your old CV, and {APP_NAME} rewrites it into a
-            typeset LaTeX PDF aimed straight at that role.
-          </p>
+            <h1 className="mt-6 text-[2rem] font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:mt-7 lg:text-[3.25rem]"
+              style={{ fontFamily: 'Syne, sans-serif' }}>
+              A CV that gets<br />
+              <span style={{ color: '#FF6B1A' }}>callbacks</span> — in one second.
+            </h1>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-            {['ATS-friendly', 'LaTeX quality', 'Free'].map(tag => (
-              <span key={tag} className="rounded-full px-3 py-1 font-mono text-[11px]"
-                style={{ background: 'rgba(255,107,26,0.08)', border: '1px solid rgba(255,107,26,0.25)', color: '#FF8C42' }}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
+            <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed" style={{ color: '#A0A8C0' }}>
+              Paste the job offer, drop your old CV, and {APP_NAME} rewrites it into a
+              typeset LaTeX PDF — plus a matching cover letter — aimed straight at that role.
+            </p>
 
-        {/* ── Sign in card ── */}
-        <div className="mt-8 rounded-2xl p-5 sm:p-6 lg:mt-10 lg:max-w-md"
-          style={{ background: 'rgba(8,12,24,0.88)', border: '1px solid #1A2040', backdropFilter: 'blur(14px)' }}>
-          <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
-            Sign in to start
-          </h2>
-          <p className="mt-1 text-sm" style={{ color: '#A0A8C0' }}>
-            Free, no credit card. Your CVs follow you to every device.
-          </p>
-
-          <div className="mt-5">
-            <GoogleSignIn />
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+              {['ATS-friendly', 'LaTeX quality', 'CV + cover letter', 'Free'].map(tag => (
+                <span key={tag} className="rounded-full px-3 py-1 font-mono text-[11px]"
+                  style={{ background: 'rgba(255,107,26,0.08)', border: '1px solid rgba(255,107,26,0.25)', color: '#FF8C42' }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
 
-          {error && (
-            <p className="mt-3 rounded-lg px-3 py-2 font-mono text-xs"
-              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5' }}>
-              {error}
-            </p>
-          )}
+          {/* Sign-in card */}
+          <div className="mt-8 w-full lg:mt-0 lg:justify-self-end lg:max-w-md">
+            <div className="rounded-2xl p-5 sm:p-6"
+              style={{ background: 'rgba(8,12,24,0.88)', border: '1px solid #1A2040', backdropFilter: 'blur(14px)' }}>
+              <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
+                Sign in to start
+              </h2>
+              <p className="mt-1 text-sm" style={{ color: '#A0A8C0' }}>
+                Free, no credit card. Your CVs follow you to every device.
+              </p>
 
-          <ul className="mt-5 space-y-2">
-            {PERKS.map(p => (
-              <li key={p} className="flex items-start gap-2.5 text-sm" style={{ color: '#C6CCE0' }}>
-                <span className="mt-[3px] text-xs" style={{ color: '#10B981' }}>✓</span>{p}
-              </li>
-            ))}
-          </ul>
+              <div className="mt-5">
+                <GoogleSignIn />
+              </div>
 
-          <div className="mt-5 rounded-lg p-3" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.18)' }}>
-            <p className="text-[11px] leading-relaxed" style={{ color: '#8FA0B8' }}>
-              🔒 <strong style={{ color: '#C6CCE0' }}>Your CVs never touch our servers.</strong> They are
-              stored in a private folder of <em>your</em> Google Drive that only this app can read.
-              Sign out — or revoke access in your Google account — and it is all gone.
-            </p>
+              {error && (
+                <p className="mt-3 rounded-lg px-3 py-2 font-mono text-xs"
+                  style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#FCA5A5' }}>
+                  {error}
+                </p>
+              )}
+
+              <ul className="mt-5 space-y-2">
+                {PERKS.map(p => (
+                  <li key={p} className="flex items-start gap-2.5 text-sm" style={{ color: '#C6CCE0' }}>
+                    <span className="mt-[3px] text-xs" style={{ color: '#10B981' }}>✓</span>{p}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-5 rounded-lg p-3" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.18)' }}>
+                <p className="text-[11px] leading-relaxed" style={{ color: '#8FA0B8' }}>
+                  🔒 <strong style={{ color: '#C6CCE0' }}>Your CVs never touch our servers.</strong> They live in a
+                  private folder of <em>your</em> Google Drive that only this app can read.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* ── How it works ── */}
-        <div className="mt-10 grid gap-3 lg:mt-14 lg:grid-cols-3 lg:gap-5">
+        <div className="mt-12 grid gap-3 sm:grid-cols-3 lg:mt-16 lg:gap-5">
           {STEPS.map((s, i) => (
             <div key={s.title} className="rounded-xl p-4 lg:p-5"
               style={{ background: 'rgba(8,12,24,0.6)', border: '1px solid #131A34' }}>
