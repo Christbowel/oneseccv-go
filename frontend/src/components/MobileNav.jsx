@@ -9,7 +9,7 @@ export default function MobileNav({ items, active, onSelect }) {
       style={{
         gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
         background: 'rgba(6,10,20,0.96)',
-        borderTop: '1px solid #131A34',
+        borderTop: '1px solid #222838',
         backdropFilter: 'blur(14px)',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
@@ -23,7 +23,7 @@ export default function MobileNav({ items, active, onSelect }) {
             aria-current={isActive ? 'page' : undefined}
             className="relative flex min-h-[56px] flex-col items-center justify-center gap-1 transition-colors duration-150 active:scale-[0.97]"
             style={{
-              color: isActive ? '#FF6B1A' : '#7A83A0',
+              color: isActive ? '#FF6B1A' : '#828BA0',
               opacity: item.disabled && !isActive ? 0.4 : 1,
               WebkitTapHighlightColor: 'transparent',
             }}>

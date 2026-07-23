@@ -12,7 +12,7 @@ export default function GoogleSignIn({ onSuccess, label = 'Continue with Google'
       <div className="w-full rounded-xl p-4 text-sm"
         style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#FCA5A5' }}>
         <p className="mb-1 font-semibold">Google Sign-In is not configured</p>
-        <p className="text-xs leading-relaxed" style={{ color: '#A0A8C0' }}>
+        <p className="text-xs leading-relaxed" style={{ color: '#9BA6BC' }}>
           Set <code className="font-mono">VITE_GOOGLE_CLIENT_ID</code> in the deployment environment,
           then redeploy. See <code className="font-mono">frontend/.env.example</code>.
         </p>

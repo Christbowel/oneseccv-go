@@ -56,16 +56,16 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-5 flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: 'Syne, sans-serif' }}>
+            <h2 className="text-xl font-bold text-white sm:text-2xl" style={{ fontFamily: 'Ubuntu, sans-serif' }}>
               My CVs
             </h2>
-            <p className="mt-1 text-sm" style={{ color: '#A0A8C0' }}>
+            <p className="mt-1 text-sm" style={{ color: '#9BA6BC' }}>
               Stored in your private Google Drive folder.
             </p>
           </div>
           <button onClick={load}
             className="shrink-0 rounded-lg px-3 py-2 text-xs transition-colors active:scale-95"
-            style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
+            style={{ background: '#171D2B', border: '1px solid #272E40', color: '#9BA6BC' }}>
             ↻ Refresh
           </button>
         </header>
@@ -82,17 +82,17 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
 
         {items === null && (
           <div className="space-y-3">
-            {[0, 1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-xl" style={{ background: '#0A0F1E' }} />)}
+            {[0, 1, 2].map(i => <div key={i} className="h-24 animate-pulse rounded-xl" style={{ background: '#171D2B' }} />)}
           </div>
         )}
 
         {items?.length === 0 && !error && (
           <div className="rounded-2xl px-6 py-12 text-center"
-            style={{ background: 'rgba(8,12,24,0.6)', border: '1px dashed #1F2748' }}>
+            style={{ background: 'rgba(8,12,24,0.6)', border: '1px dashed #2A3145' }}>
             <div className="mb-3 text-3xl opacity-40">🗂</div>
             <p className="text-sm font-semibold text-white">No CV saved yet</p>
-            <p className="mx-auto mt-1 max-w-xs text-sm" style={{ color: '#A0A8C0' }}>
-              Generate one and it lands here automatically — on every device you sign in from.
+            <p className="mx-auto mt-1 max-w-xs text-sm" style={{ color: '#9BA6BC' }}>
+              Generate one and it lands here automatically - on every device you sign in from.
             </p>
           </div>
         )}
@@ -101,10 +101,10 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
           {items?.map(cv => (
             <li key={cv.id}
               className="flex items-center gap-3 rounded-xl p-3 sm:gap-4 sm:p-4"
-              style={{ background: 'rgba(8,12,24,0.75)', border: '1px solid #1A2040' }}>
+              style={{ background: 'rgba(8,12,24,0.75)', border: '1px solid #272E40' }}>
 
               <div className="h-16 w-12 shrink-0 overflow-hidden rounded"
-                style={{ background: '#0A0F1E', border: '1px solid #131A34' }}>
+                style={{ background: '#171D2B', border: '1px solid #222838' }}>
                 {cv.thumbnail
                   ? <img src={`data:image/png;base64,${cv.thumbnail}`} alt="" className="h-full w-full object-cover object-top" />
                   : <div className="flex h-full items-center justify-center text-lg opacity-30">📄</div>}
@@ -120,11 +120,11 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
                     </span>
                   )}
                 </div>
-                <p className="mt-0.5 truncate font-mono text-[11px]" style={{ color: '#7A83A0' }}>
+                <p className="mt-0.5 truncate font-mono text-[11px]" style={{ color: '#828BA0' }}>
                   {cv.template || 'template'} · {formatDate(cv.updatedAt)}
                 </p>
                 {cv.targetJob && (
-                  <p className="mt-1 truncate text-xs" style={{ color: '#A0A8C0' }}>🎯 {cv.targetJob}</p>
+                  <p className="mt-1 truncate text-xs" style={{ color: '#9BA6BC' }}>🎯 {cv.targetJob}</p>
                 )}
               </div>
 
@@ -137,7 +137,7 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
                 <button onClick={() => remove(cv.id)} disabled={busyId === cv.id}
                   aria-label={`Delete ${cv.title}`}
                   className="rounded-lg px-3 py-2 text-xs transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#7A83A0' }}>
+                  style={{ background: '#171D2B', border: '1px solid #272E40', color: '#828BA0' }}>
                   ✕
                 </button>
               </div>

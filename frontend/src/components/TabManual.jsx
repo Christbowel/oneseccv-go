@@ -16,7 +16,7 @@ const FIELDS = [
 const emptyFields = () => Object.fromEntries(FIELDS.map(f => [f.key, '']))
 
 export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
-  // The form is long — never lose it to a refresh or an app switch on mobile.
+  // The form is long - never lose it to a refresh or an app switch on mobile.
   const [fields, setFields] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(LS.draft) || 'null')
@@ -48,9 +48,9 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
         <div className="mx-auto w-full max-w-3xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="label" style={{ marginBottom: 0 }}>Guided form</p>
-            <span className="font-mono text-xs" style={{ color: '#A0A8C0' }}>{filled}/{FIELDS.length} filled</span>
+            <span className="font-mono text-xs" style={{ color: '#9BA6BC' }}>{filled}/{FIELDS.length} filled</span>
           </div>
-          <div className="h-1 overflow-hidden rounded-full" style={{ background: '#1A2040' }}>
+          <div className="h-1 overflow-hidden rounded-full" style={{ background: '#272E40' }}>
             <div className="h-full rounded-full transition-all duration-300"
               style={{ width: `${(filled / FIELDS.length) * 100}%`, background: 'linear-gradient(90deg, #FF6B1A, #FF8C42)' }} />
           </div>
@@ -92,7 +92,7 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
 
       {/* Sticky action */}
       <div className="shrink-0 px-4 py-3 sm:px-6"
-        style={{ borderTop: '1px solid #1A2040', background: 'rgba(8,12,24,0.85)', backdropFilter: 'blur(8px)' }}>
+        style={{ borderTop: '1px solid #272E40', background: 'rgba(8,12,24,0.85)', backdropFilter: 'blur(8px)' }}>
         <div className="mx-auto w-full max-w-3xl">
           <button onClick={() => onGenerate(buildUserData(), instruction)} disabled={!canGenerate}
             className="w-full rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40"
@@ -105,7 +105,7 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
             ) : '✨ Generate my CV'}
           </button>
           {filled < 2 && (
-            <p className="mt-2 text-center font-mono text-xs" style={{ color: '#5A6280' }}>
+            <p className="mt-2 text-center font-mono text-xs" style={{ color: '#6C7488' }}>
               Fill at least 2 sections to generate
             </p>
           )}

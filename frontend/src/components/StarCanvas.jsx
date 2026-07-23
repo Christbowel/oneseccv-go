@@ -67,7 +67,7 @@ export default function StarCanvas() {
         canvas.width * 0.5, canvas.height * 0.3, canvas.width * 0.8
       )
       bg.addColorStop(0, '#0A0F20')
-      bg.addColorStop(1, '#050810')
+      bg.addColorStop(1, '#0A0E17')
       ctx.fillStyle = bg
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 

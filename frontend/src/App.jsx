@@ -116,7 +116,7 @@ function Workspace() {
     localStorage.setItem(LS.apiKey, key)
     setApiKey(key)
     track(EV.keySaved)
-    showToast('success', 'Gemini key activated — you are ready to generate.')
+    showToast('success', 'Gemini key activated - you are ready to generate.')
   }, [showToast])
 
   const handleClearKey = useCallback(() => {
@@ -133,7 +133,7 @@ function Workspace() {
       const thumbnail = await makeThumbnail(pages?.[0])
       const entry = await drive.saveCV({
         id,
-        title: goalJob.trim() || `CV — ${new Date().toLocaleDateString()}`,
+        title: goalJob.trim() || `CV - ${new Date().toLocaleDateString()}`,
         template: selectedTpl,
         targetJob: goalJob.trim(),
         source,
@@ -147,7 +147,7 @@ function Workspace() {
       return entry
     } catch (e) {
       if (handleAuthError(e)) return null
-      showToast('error', `Saved locally only — Drive sync failed: ${e.message}`)
+      showToast('error', `Saved locally only - Drive sync failed: ${e.message}`)
       return null
     }
   }, [goalJob, selectedTpl, handleAuthError, showToast])
@@ -188,7 +188,7 @@ function Workspace() {
           setPreviewDoc('cv')
           setScreen('preview')
           setResultMsg({ type: 'success', text: '✨ CV generated successfully!' })
-          showToast('success', '✨ CV ready — saving to your Drive…')
+          showToast('success', '✨ CV ready - saving to your Drive…')
           track(EV.generateOk, { template: selectedTpl, attempts: attempt })
           saveToDrive(source, preview.pages)
           return
@@ -202,7 +202,7 @@ function Workspace() {
       }
 
       setResultMsg({ type: 'error', text: `❌ Compilation failed after ${maxAttempts} attempts.\n\n${lastError}` })
-      showToast('error', 'Compilation failed — try another template.')
+      showToast('error', 'Compilation failed - try another template.')
       track(EV.generateFail, { reason: 'compile', template: selectedTpl })
     } catch (e) {
       const msg = String(e?.message || e)
@@ -265,7 +265,7 @@ function Workspace() {
           setLetterSource(source)
           setLetterPages(preview.pages)
           setPreviewDoc('letter')
-          showToast('success', '✉ Cover letter ready — saved to your Drive.')
+          showToast('success', '✉ Cover letter ready - saved to your Drive.')
           track(EV.letterOk, { attempts: attempt })
           saveToDrive(latexSource, previewPages, { id: currentCvId, extra: { coverLetterSource: source } })
           return
@@ -355,7 +355,7 @@ function Workspace() {
   }, [previewPages.length, showToast])
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden" style={{ background: '#050810' }}>
+    <div className="flex h-[100dvh] flex-col overflow-hidden" style={{ background: '#0A0E17' }}>
       <StarCanvas />
 
       {/* ── Header ── */}
@@ -363,7 +363,7 @@ function Workspace() {
         style={{
           background: 'rgba(8,12,24,0.92)',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid #1A2040',
+          borderBottom: '1px solid #272E40',
           paddingTop: 'max(0.625rem, env(safe-area-inset-top))',
         }}>
         <div className="flex min-w-0 items-center gap-2.5">
@@ -375,11 +375,11 @@ function Workspace() {
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[15px] font-bold leading-tight text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
+            <p className="truncate text-[15px] font-bold leading-tight text-white" style={{ fontFamily: 'Ubuntu, sans-serif' }}>
               {APP_NAME}
             </p>
             <p className="hidden truncate font-mono text-[10px] sm:block" style={{ color: '#FF6B1A' }}>
-              Hi {user?.name?.split(' ')[0] || 'there'} — let's get you hired
+              Hi {user?.name?.split(' ')[0] || 'there'} - let's get you hired
             </p>
           </div>
         </div>
@@ -473,7 +473,7 @@ function Workspace() {
       </main>
 
       {toast && <Toast type={toast.type} text={toast.text} onClose={() => setToast(null)} />}
-      {/* Only ask to install once they have something worth coming back for —
+      {/* Only ask to install once they have something worth coming back for -
           before that the banner just sits on top of the primary CTA. */}
       {previewPages.length > 0 && !isGenerating && screen !== 'preview' && <InstallPrompt />}
 
@@ -488,7 +488,7 @@ function Workspace() {
 
 function Splash() {
   return (
-    <div className="flex h-[100dvh] flex-col items-center justify-center gap-4" style={{ background: '#050810' }}>
+    <div className="flex h-[100dvh] flex-col items-center justify-center gap-4" style={{ background: '#0A0E17' }}>
       <div className="glow-orange flex h-14 w-14 items-center justify-center rounded-2xl"
         style={{ background: 'linear-gradient(135deg, #FF6B1A, #CC4A00)' }}>
         <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -501,14 +501,14 @@ function Splash() {
 function SegmentedControl({ value, onChange, options }) {
   return (
     <div className="grid grid-cols-2 gap-1 rounded-xl p-1"
-      style={{ background: '#0A0F1E', border: '1px solid #1A2040' }}>
+      style={{ background: '#171D2B', border: '1px solid #272E40' }}>
       {options.map(opt => (
         <button key={opt.id} onClick={() => onChange(opt.id)}
           className="rounded-lg py-2.5 text-sm font-semibold transition-all active:scale-[0.98]"
           style={{
             background: value === opt.id ? 'rgba(255,107,26,0.14)' : 'transparent',
             border: value === opt.id ? '1px solid rgba(255,107,26,0.4)' : '1px solid transparent',
-            color: value === opt.id ? '#fff' : '#A0A8C0',
+            color: value === opt.id ? '#fff' : '#9BA6BC',
           }}>
           {opt.label}
         </button>
@@ -518,7 +518,7 @@ function SegmentedControl({ value, onChange, options }) {
 }
 
 function StatusPill({ label, ready }) {
-  const color = ready === null ? '#5A6280' : ready ? '#10B981' : '#EF4444'
+  const color = ready === null ? '#6C7488' : ready ? '#10B981' : '#EF4444'
   return (
     <div className="hidden items-center gap-1.5 rounded-full px-2.5 py-1.5 font-mono text-[11px] sm:flex"
       style={{ border: `1px solid ${color}59`, background: `${color}14`, color }}>
@@ -531,7 +531,7 @@ function StatusPill({ label, ready }) {
 function Toast({ type, text, onClose }) {
   const isErr = type === 'error'
   return (
-    // Top on phones — the bottom of the screen belongs to the nav and the
+    // Top on phones - the bottom of the screen belongs to the nav and the
     // primary CTA. Bottom-right on desktop, where that is the convention.
     <div className="animate-slide-up fixed left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 items-start gap-3 rounded-xl p-4
                     top-[calc(env(safe-area-inset-top)+10.5rem)]

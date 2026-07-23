@@ -3,7 +3,7 @@ import { useState } from 'react'
 /**
  * The job the CV is aimed at. The description is pasted, not fetched: nearly
  * every job board sits behind a login, so a URL would fail more often than it
- * would work — and a paste takes the user two seconds.
+ * would work - and a paste takes the user two seconds.
  */
 export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, disabled }) {
   const [expanded, setExpanded] = useState(false)
@@ -12,12 +12,12 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
 
   return (
     <section className="rounded-xl p-4"
-      style={{ background: 'rgba(8,12,24,0.7)', border: '1px solid #1A2040' }}>
+      style={{ background: 'rgba(8,12,24,0.7)', border: '1px solid #272E40' }}>
 
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="label" style={{ marginBottom: 2 }}>🎯 Target job</p>
-          <p className="text-xs" style={{ color: '#7A83A0' }}>
+          <p className="text-xs" style={{ color: '#828BA0' }}>
             What the AI aims your CV at
           </p>
         </div>
@@ -28,7 +28,7 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
         type="text"
         inputMode="text"
         autoComplete="organization-title"
-        placeholder="Job title — e.g. Cybersecurity Engineer"
+        placeholder="Job title - e.g. Cybersecurity Engineer"
         value={goalJob}
         onChange={e => setGoalJob(e.target.value)}
         disabled={disabled}
@@ -40,13 +40,13 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
         onClick={() => setExpanded(v => !v)}
         aria-expanded={expanded}
         className="mt-3 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors active:scale-[0.99]"
-        style={{ background: '#0A0F1E', border: '1px solid #1A2040' }}>
-        <span className="flex items-center gap-2 text-sm" style={{ color: chars ? '#F5F5F5' : '#A0A8C0' }}>
+        style={{ background: '#171D2B', border: '1px solid #272E40' }}>
+        <span className="flex items-center gap-2 text-sm" style={{ color: chars ? '#F2F4F8' : '#9BA6BC' }}>
           <span aria-hidden="true">📋</span>
-          {chars ? `Job description — ${chars.toLocaleString()} characters` : 'Paste the job description'}
+          {chars ? `Job description - ${chars.toLocaleString()} characters` : 'Paste the job description'}
           {chars > 0 && <span style={{ color: '#10B981' }}>✓</span>}
         </span>
-        <span className="text-xs" style={{ color: '#7A83A0' }}>{expanded ? '▲' : '▼'}</span>
+        <span className="text-xs" style={{ color: '#828BA0' }}>{expanded ? '▲' : '▼'}</span>
       </button>
 
       {expanded && (
@@ -54,7 +54,7 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
           <textarea
             rows={7}
             placeholder={
-              'Copy the whole offer here — requirements, responsibilities, stack…\n\n' +
+              'Copy the whole offer here - requirements, responsibilities, stack…\n\n' +
               'The AI mirrors its exact wording, which is what most ATS filters match on.'
             }
             value={jobDesc}
@@ -64,12 +64,12 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
             style={{ minHeight: 150 }}
           />
           <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-[11px] leading-snug" style={{ color: '#5A6280' }}>
-              Paste the text, not the link — job pages are usually behind a login.
+            <p className="text-[11px] leading-snug" style={{ color: '#6C7488' }}>
+              Paste the text, not the link - job pages are usually behind a login.
             </p>
             {chars > 0 && (
               <button type="button" onClick={() => setJobDesc('')} disabled={disabled}
-                className="shrink-0 text-[11px] underline" style={{ color: '#7A83A0' }}>
+                className="shrink-0 text-[11px] underline" style={{ color: '#828BA0' }}>
                 Clear
               </button>
             )}
@@ -82,7 +82,7 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
 
 function StrengthPill({ strength }) {
   const map = [
-    { label: 'No offer',   color: '#5A6280', bg: 'rgba(90,98,128,0.12)' },
+    { label: 'No offer',   color: '#6C7488', bg: 'rgba(90,98,128,0.12)' },
     { label: 'Thin',       color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
     { label: 'Good',       color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
     { label: 'Excellent',  color: '#10B981', bg: 'rgba(16,185,129,0.18)' },

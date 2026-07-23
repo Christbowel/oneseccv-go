@@ -6,13 +6,13 @@ const SLIDES = [
   {
     icon: '📋',
     title: 'Paste the job offer',
-    body: 'Copy the posting into OneSecCV. The AI mirrors its exact wording — the words most ATS filters actually match on.',
+    body: 'Copy the posting into OneSecCV. The AI mirrors its exact wording - the words most ATS filters actually match on.',
     art: 'offer',
   },
   {
     icon: '📄',
     title: 'Drop your old CV',
-    body: 'Import a PDF, DOCX or TXT — or fill the guided form. Your experience gets rewritten into sharp, quantified impact bullets.',
+    body: 'Import a PDF, DOCX or TXT - or fill the guided form. Your experience gets rewritten into sharp, quantified impact bullets.',
     art: 'cv',
   },
   {
@@ -45,11 +45,11 @@ export default function Onboarding({ onDone }) {
     <div className={`fixed inset-0 z-[60] flex items-end justify-center sm:items-center ${leaving ? '' : 'animate-fade-in'}`}
       style={{ background: 'rgba(5,8,16,0.9)', backdropFilter: 'blur(10px)', opacity: leaving ? 0 : 1, transition: 'opacity 0.2s' }}>
       <div className="w-full max-w-md overflow-hidden rounded-t-2xl sm:rounded-2xl"
-        style={{ background: '#080C18', border: '1px solid #1A2040', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+        style={{ background: '#141926', border: '1px solid #272E40', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
 
         {/* Skip */}
         <div className="flex justify-end px-4 pt-4">
-          <button onClick={finish} className="text-xs" style={{ color: '#5A6280' }}>Skip</button>
+          <button onClick={finish} className="text-xs" style={{ color: '#6C7488' }}>Skip</button>
         </div>
 
         {/* Art */}
@@ -63,8 +63,8 @@ export default function Onboarding({ onDone }) {
             style={{ background: 'rgba(255,107,26,0.12)', border: '1px solid rgba(255,107,26,0.3)' }}>
             {slide.icon}
           </div>
-          <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>{slide.title}</h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed" style={{ color: '#A0A8C0' }}>{slide.body}</p>
+          <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Ubuntu, sans-serif' }}>{slide.title}</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed" style={{ color: '#9BA6BC' }}>{slide.body}</p>
         </div>
 
         {/* Dots */}
@@ -72,7 +72,7 @@ export default function Onboarding({ onDone }) {
           {SLIDES.map((_, idx) => (
             <button key={idx} onClick={() => setI(idx)} aria-label={`Go to step ${idx + 1}`}
               className="h-1.5 rounded-full transition-all duration-300"
-              style={{ width: idx === i ? 22 : 7, background: idx === i ? '#FF6B1A' : '#2A3050' }} />
+              style={{ width: idx === i ? 22 : 7, background: idx === i ? '#FF6B1A' : '#333B52' }} />
           ))}
         </div>
 
@@ -89,16 +89,16 @@ export default function Onboarding({ onDone }) {
   )
 }
 
-/** Small inline SVG illustrations — no external assets, theme-matched. */
+/** Small inline SVG illustrations - no external assets, theme-matched. */
 function SlideArt({ kind }) {
   const orange = '#FF6B1A'
-  const dim = '#1E2748'
-  const line = '#2A3550'
+  const dim = '#2A3145'
+  const line = '#333B52'
 
   if (kind === 'offer') {
     return (
       <svg viewBox="0 0 240 150" className="w-full" role="img" aria-label="Pasting a job offer">
-        <rect x="30" y="18" width="180" height="118" rx="10" fill="#0A0F1E" stroke={line} />
+        <rect x="30" y="18" width="180" height="118" rx="10" fill="#171D2B" stroke={line} />
         <rect x="46" y="34" width="86" height="9" rx="4.5" fill={orange} />
         <rect x="46" y="54" width="148" height="6" rx="3" fill={dim} />
         <rect x="46" y="68" width="148" height="6" rx="3" fill={dim} />
@@ -114,13 +114,13 @@ function SlideArt({ kind }) {
   if (kind === 'cv') {
     return (
       <svg viewBox="0 0 240 150" className="w-full" role="img" aria-label="Importing a CV">
-        <rect x="20" y="26" width="92" height="104" rx="8" fill="#0A0F1E" stroke={line} />
+        <rect x="20" y="26" width="92" height="104" rx="8" fill="#171D2B" stroke={line} />
         <rect x="32" y="40" width="40" height="7" rx="3.5" fill={line} />
         <rect x="32" y="56" width="68" height="5" rx="2.5" fill={dim} />
         <rect x="32" y="68" width="68" height="5" rx="2.5" fill={dim} />
         <rect x="32" y="80" width="52" height="5" rx="2.5" fill={dim} />
         <path d="M124 78 h28 M143 68 l11 10 l-11 10" stroke={orange} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <rect x="164" y="26" width="56" height="104" rx="8" fill="#0A0F1E" stroke={orange} />
+        <rect x="164" y="26" width="56" height="104" rx="8" fill="#171D2B" stroke={orange} />
         <rect x="174" y="40" width="30" height="7" rx="3.5" fill={orange} />
         <rect x="174" y="56" width="36" height="5" rx="2.5" fill={line} />
         <rect x="174" y="66" width="36" height="5" rx="2.5" fill={line} />
@@ -132,14 +132,14 @@ function SlideArt({ kind }) {
   return (
     <svg viewBox="0 0 240 150" className="w-full" role="img" aria-label="CV and cover letter">
       <g transform="rotate(-6 70 75)">
-        <rect x="34" y="26" width="86" height="104" rx="8" fill="#0A0F1E" stroke={line} />
+        <rect x="34" y="26" width="86" height="104" rx="8" fill="#171D2B" stroke={line} />
         <rect x="46" y="40" width="34" height="7" rx="3.5" fill={orange} />
         <rect x="46" y="56" width="62" height="5" rx="2.5" fill={dim} />
         <rect x="46" y="66" width="62" height="5" rx="2.5" fill={dim} />
         <rect x="46" y="82" width="44" height="5" rx="2.5" fill={dim} />
       </g>
       <g transform="rotate(6 168 75)">
-        <rect x="126" y="26" width="86" height="104" rx="8" fill="#0A0F1E" stroke={orange} />
+        <rect x="126" y="26" width="86" height="104" rx="8" fill="#171D2B" stroke={orange} />
         <rect x="138" y="42" width="46" height="8" rx="4" fill={orange} />
         <rect x="138" y="60" width="62" height="5" rx="2.5" fill={line} />
         <rect x="138" y="72" width="62" height="5" rx="2.5" fill={line} />

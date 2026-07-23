@@ -1,93 +1,69 @@
 import { useEffect, useState } from 'react'
-import { EV, isStandalone, track } from '../lib/analytics'
+import { useInstall } from '../lib/pwa'
+import { EV, track } from '../lib/analytics'
 import { LS } from '../config'
 
 /**
- * "Add to home screen" nudge.
- * Chrome/Edge/Android fire `beforeinstallprompt`, so we can trigger the native
- * dialog. iOS Safari has no such API — there we explain the Share ▸ Add to
- * Home Screen gesture instead, which is the only way in.
+ * Lightweight "install" nudge shown once after the user has something worth
+ * coming back for. The full, always-available install entry lives in Settings
+ * (InstallCard); this is just a gentle reminder.
  */
 export default function InstallPrompt() {
-  const [deferred, setDeferred] = useState(null)
-  const [show, setShow]         = useState(false)
-  const [iosHint, setIosHint]   = useState(false)
+  const { available, standalone, iosSafari, promptInstall } = useInstall()
+  const [dismissed, setDismissed] = useState(() => Boolean(localStorage.getItem(LS.installDismissed)))
+  const [show, setShow] = useState(false)
 
+  // Reveal shortly after mount so it doesn't fight the first paint.
   useEffect(() => {
-    if (isStandalone() || localStorage.getItem(LS.installDismissed)) return
+    if (dismissed || standalone) return
+    if (!available && !iosSafari) return
+    const t = setTimeout(() => setShow(true), 1200)
+    return () => clearTimeout(t)
+  }, [dismissed, standalone, available, iosSafari])
 
-    const onPrompt = (e) => {
-      e.preventDefault()
-      setDeferred(e)
-      setShow(true)
-    }
-    window.addEventListener('beforeinstallprompt', onPrompt)
-
-    const onInstalled = () => { track(EV.installPWA, { source: 'prompt' }); setShow(false) }
-    window.addEventListener('appinstalled', onInstalled)
-
-    // iOS: no event to wait for — surface the hint after a little use.
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
-    const isSafari = /safari/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent)
-    let timer
-    if (isIOS && isSafari) {
-      timer = setTimeout(() => { setIosHint(true); setShow(true) }, 25000)
-    }
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt)
-      window.removeEventListener('appinstalled', onInstalled)
-      clearTimeout(timer)
-    }
-  }, [])
+  if (!show || dismissed || standalone) return null
 
   const dismiss = () => {
     localStorage.setItem(LS.installDismissed, String(Date.now()))
-    setShow(false)
+    setDismissed(true)
   }
 
   const install = async () => {
-    if (!deferred) return
-    deferred.prompt()
-    const { outcome } = await deferred.userChoice.catch(() => ({ outcome: 'dismissed' }))
-    track(EV.installPWA, { outcome })
-    if (outcome !== 'accepted') dismiss()
-    setDeferred(null)
-    setShow(false)
+    const outcome = await promptInstall()
+    track(EV.installPWA, { source: 'prompt', outcome })
+    dismiss()
   }
 
-  if (!show) return null
-
   return (
-    <div className="animate-slide-up fixed left-1/2 z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-xl p-4"
+    <div className="animate-slide-up fixed left-1/2 z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl p-4"
       style={{
         bottom: 'calc(env(safe-area-inset-bottom) + 4.75rem)',
-        background: 'rgba(10,15,30,0.97)',
-        border: '1px solid rgba(255,107,26,0.35)',
-        boxShadow: '0 18px 50px rgba(0,0,0,0.55)',
+        background: 'rgba(20,25,38,0.97)',
+        border: '1px solid rgba(255,107,26,0.3)',
+        boxShadow: '0 18px 50px rgba(0,0,0,0.5)',
         backdropFilter: 'blur(10px)',
       }}>
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base"
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base"
           style={{ background: 'rgba(255,107,26,0.12)', border: '1px solid rgba(255,107,26,0.3)' }}>
           📲
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
+          <p className="text-sm font-semibold text-white" style={{ fontFamily: 'Ubuntu, sans-serif' }}>
             Install OneSecCV
           </p>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: '#A0A8C0' }}>
-            {iosHint
-              ? <>Tap <strong style={{ color: '#F5F5F5' }}>Share</strong> ▸ <strong style={{ color: '#F5F5F5' }}>Add to Home Screen</strong> to keep it one tap away.</>
-              : 'Full screen, offline-ready, one tap from your home screen.'}
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: '#9BA6BC' }}>
+            {iosSafari
+              ? <>Tap <strong style={{ color: '#F2F4F8' }}>Share</strong> ▸ <strong style={{ color: '#F2F4F8' }}>Add to Home Screen</strong>.</>
+              : 'Keep it one tap from your home screen, works offline.'}
           </p>
         </div>
-        <button onClick={dismiss} aria-label="Dismiss" className="shrink-0 text-xs" style={{ color: '#5A6280' }}>✕</button>
+        <button onClick={dismiss} aria-label="Dismiss" className="shrink-0 text-xs" style={{ color: '#6C7488' }}>✕</button>
       </div>
 
-      {!iosHint && (
+      {available && (
         <button onClick={install}
-          className="mt-3 w-full rounded-lg py-2.5 text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98]"
+          className="mt-3 w-full rounded-xl py-2.5 text-xs font-semibold transition-all active:scale-[0.98]"
           style={{ background: '#FF6B1A', color: '#fff' }}>
           Add to home screen
         </button>

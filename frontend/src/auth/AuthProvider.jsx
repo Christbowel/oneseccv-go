@@ -55,11 +55,17 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const signOut = useCallback(async () => {
-    await google.signOut()
+  const signOut = useCallback(() => {
+    // Clear local state synchronously so the UI returns to the landing page
+    // instantly — never block sign-out on a network call (revoking the token
+    // with Google can hang, which used to leave the user apparently stuck).
+    google.clearSession()
     resetDriveCache()
     clearIdentity()
     setUser(null)
+    try { window.google?.accounts?.id?.disableAutoSelect?.() } catch { /* noop */ }
+    // Best-effort token revocation in the background.
+    google.signOut().catch(() => {})
   }, [])
 
   /** Called when Drive reports the grant is gone: drop back to signed-out. */

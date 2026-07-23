@@ -45,32 +45,32 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
           <button onClick={() => fileRef.current?.click()} disabled={isGenerating}
             className="w-full rounded-xl p-6 text-center transition-all duration-200 active:scale-[0.99] disabled:opacity-50"
             style={{
-              border: fileName ? '2px dashed rgba(255,107,26,0.6)' : '2px dashed #2A3050',
+              border: fileName ? '2px dashed rgba(255,107,26,0.6)' : '2px dashed #333B52',
               background: fileName ? 'rgba(255,107,26,0.06)' : 'rgba(8,12,24,0.5)',
             }}>
             {extracting ? (
               <div className="flex flex-col items-center gap-2">
                 <div className="h-7 w-7 animate-spin rounded-full border-2 border-t-transparent"
                   style={{ borderColor: 'rgba(255,107,26,0.3)', borderTopColor: '#FF6B1A' }} />
-                <p className="text-sm" style={{ color: '#A0A8C0' }}>Extracting text…</p>
+                <p className="text-sm" style={{ color: '#9BA6BC' }}>Extracting text…</p>
               </div>
             ) : fileName ? (
               <div className="flex flex-col items-center gap-1.5">
                 <span className="text-2xl">📄</span>
                 <p className="break-all font-mono text-sm" style={{ color: '#FF8C42' }}>{fileName}</p>
-                <p className="text-xs" style={{ color: '#A0A8C0' }}>Tap to choose another file</p>
+                <p className="text-xs" style={{ color: '#9BA6BC' }}>Tap to choose another file</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <span className="text-3xl opacity-30">⬆</span>
                 <p className="text-sm font-semibold text-white">Import your CV</p>
-                <p className="text-xs" style={{ color: '#A0A8C0' }}>PDF, DOCX or TXT</p>
+                <p className="text-xs" style={{ color: '#9BA6BC' }}>PDF, DOCX or TXT</p>
               </div>
             )}
           </button>
 
           <button onClick={() => setPasteMode(v => !v)}
-            className="mt-2 w-full text-center text-xs underline" style={{ color: '#7A83A0' }}>
+            className="mt-2 w-full text-center text-xs underline" style={{ color: '#828BA0' }}>
             {pasteMode ? 'Hide the text box' : 'No file handy? Paste your CV text instead'}
           </button>
 
@@ -98,7 +98,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
             <p className="font-mono text-xs" style={{ color: '#10B981' }}>
               {extracted.length.toLocaleString()} characters read
             </p>
-            <button onClick={() => setPasteMode(true)} className="text-xs underline" style={{ color: '#7A83A0' }}>
+            <button onClick={() => setPasteMode(true)} className="text-xs underline" style={{ color: '#828BA0' }}>
               review / edit
             </button>
           </div>
@@ -106,7 +106,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
 
         {/* Extra instructions */}
         <div>
-          <label className="label">Extra instructions <span style={{ color: '#5A6280' }}>(optional)</span></label>
+          <label className="label">Extra instructions <span style={{ color: '#6C7488' }}>(optional)</span></label>
           <textarea rows={3}
             placeholder="e.g. keep it to one page, emphasise open-source work, write it in French…"
             value={instruction} onChange={e => setInstruction(e.target.value)} disabled={isGenerating}
@@ -119,7 +119,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
         <div className="flex gap-3 pb-2">
           <button onClick={reset} disabled={isGenerating}
             className="rounded-lg px-4 py-3.5 font-mono text-xs transition-all disabled:opacity-30"
-            style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#7A83A0' }}>
+            style={{ background: '#171D2B', border: '1px solid #272E40', color: '#828BA0' }}>
             Reset
           </button>
           <button onClick={() => onGenerate(extracted, instruction)} disabled={!canGenerate}
@@ -130,7 +130,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
         </div>
 
         {!canGenerate && !isGenerating && (
-          <p className="pb-2 text-center font-mono text-xs" style={{ color: '#5A6280' }}>
+          <p className="pb-2 text-center font-mono text-xs" style={{ color: '#6C7488' }}>
             Import or paste your CV to continue
           </p>
         )}

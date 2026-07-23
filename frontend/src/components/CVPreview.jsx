@@ -41,7 +41,7 @@ export default function CVPreview({
       <div className="flex shrink-0 items-center justify-center gap-2 px-3 pt-3"
         style={{ background: 'rgba(8,12,24,0.95)' }}>
         <div className="grid w-full max-w-sm grid-cols-2 gap-1 rounded-xl p-1"
-          style={{ background: '#0A0F1E', border: '1px solid #1A2040' }}>
+          style={{ background: '#171D2B', border: '1px solid #272E40' }}>
           <DocTab active={!isLetter} onClick={() => onDocChange('cv')} icon="📄" label="CV" />
           {hasLetter ? (
             <DocTab active={isLetter} onClick={() => onDocChange('letter')} icon="✉" label="Cover letter" />
@@ -57,9 +57,9 @@ export default function CVPreview({
 
       {/* ── Toolbar ── */}
       <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-2 sm:px-5 sm:py-3"
-        style={{ background: 'rgba(8,12,24,0.95)', borderBottom: '1px solid #1A2040' }}>
+        style={{ background: 'rgba(8,12,24,0.95)', borderBottom: '1px solid #272E40' }}>
 
-        <span className="shrink-0 font-mono text-xs" style={{ color: '#A0A8C0' }}>
+        <span className="shrink-0 font-mono text-xs" style={{ color: '#9BA6BC' }}>
           {pages.length} page{pages.length > 1 ? 's' : ''}
         </span>
 
@@ -74,7 +74,7 @@ export default function CVPreview({
                 style={{
                   background: zoom === v ? 'rgba(255,107,26,0.15)' : 'transparent',
                   border: `1px solid ${zoom === v ? 'rgba(255,107,26,0.4)' : 'transparent'}`,
-                  color: zoom === v ? '#FF6B1A' : '#A0A8C0',
+                  color: zoom === v ? '#FF6B1A' : '#9BA6BC',
                 }}>
                 {v}%
               </button>
@@ -98,7 +98,7 @@ export default function CVPreview({
 
       {/* ── Pages ── */}
       <div className="relative min-h-0 flex-1 overflow-auto overscroll-contain p-4 sm:p-8"
-        style={{ background: '#0A0F1E' }}>
+        style={{ background: '#171D2B' }}>
         {loading && (
           <div className="fixed inset-0 z-30 flex items-center justify-center" style={{ background: 'rgba(5,8,16,0.78)' }}>
             <div className="flex flex-col items-center gap-3">
@@ -123,7 +123,7 @@ export default function CVPreview({
 
       {/* ── Mobile download bar ── */}
       <div className="shrink-0 px-4 py-3 lg:hidden"
-        style={{ borderTop: '1px solid #1A2040', background: 'rgba(8,12,24,0.9)' }}>
+        style={{ borderTop: '1px solid #272E40', background: 'rgba(8,12,24,0.9)' }}>
         <button onClick={onDownload} disabled={loading}
           className="w-full rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40"
           style={{ background: '#FF6B1A', color: '#fff', boxShadow: '0 0 22px rgba(255,107,26,0.35)' }}>
@@ -136,21 +136,21 @@ export default function CVPreview({
         <div className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center sm:items-center"
           style={{ background: 'rgba(5,8,16,0.85)' }} onClick={() => setSheet(false)}>
           <div className="animate-slide-up w-full max-w-md rounded-t-2xl p-5 sm:rounded-2xl sm:p-6"
-            style={{ background: '#080C18', border: '1px solid #1A2040', paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+            style={{ background: '#141926', border: '1px solid #272E40', paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
             onClick={e => e.stopPropagation()}>
 
-            <h3 className="mb-1 text-lg font-bold" style={{ fontFamily: 'Syne, sans-serif', color: '#F5F5F5' }}>
+            <h3 className="mb-1 text-lg font-bold" style={{ fontFamily: 'Ubuntu, sans-serif', color: '#F2F4F8' }}>
               Refine your {isLetter ? 'cover letter' : 'CV'}
             </h3>
-            <p className="mb-4 text-sm" style={{ color: '#A0A8C0' }}>
-              Describe the change in plain words — the AI rewrites and recompiles.
+            <p className="mb-4 text-sm" style={{ color: '#9BA6BC' }}>
+              Describe the change in plain words - the AI rewrites and recompiles.
             </p>
 
             <div className="mb-3 flex flex-wrap gap-2">
               {QUICK_EDITS[isLetter ? 'letter' : 'cv'].map(q => (
                 <button key={q} onClick={() => submitRefine(q)}
                   className="rounded-full px-3 py-1.5 text-left text-xs transition-colors active:scale-95"
-                  style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
+                  style={{ background: '#171D2B', border: '1px solid #272E40', color: '#9BA6BC' }}>
                   {q}
                 </button>
               ))}
@@ -163,7 +163,7 @@ export default function CVPreview({
             <div className="mt-4 flex gap-3">
               <button onClick={() => setSheet(false)}
                 className="rounded-lg px-4 py-3 text-sm"
-                style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
+                style={{ background: '#171D2B', border: '1px solid #272E40', color: '#9BA6BC' }}>
                 Cancel
               </button>
               <button onClick={() => submitRefine()} disabled={!instruction.trim()}
@@ -186,7 +186,7 @@ function DocTab({ active, onClick, icon, label }) {
       style={{
         background: active ? 'rgba(255,107,26,0.14)' : 'transparent',
         border: active ? '1px solid rgba(255,107,26,0.4)' : '1px solid transparent',
-        color: active ? '#fff' : '#A0A8C0',
+        color: active ? '#fff' : '#9BA6BC',
       }}>
       <span aria-hidden="true">{icon}</span>{label}
     </button>
@@ -198,7 +198,7 @@ function ZoomButton({ label, onClick }) {
     <button onClick={onClick}
       aria-label={label === '+' ? 'Zoom in' : 'Zoom out'}
       className="flex h-9 w-9 items-center justify-center rounded-lg text-base font-bold transition-all active:scale-95"
-      style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#F5F5F5' }}>
+      style={{ background: '#171D2B', border: '1px solid #272E40', color: '#F2F4F8' }}>
       {label}
     </button>
   )
