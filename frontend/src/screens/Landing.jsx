@@ -10,10 +10,10 @@ const STEPS = [
 ]
 
 const PERKS = [
+  'CV + matching cover letter, one job offer',
   'Rewritten for the exact job you paste',
   'Typeset with LaTeX — not a Word template',
   'History saved in your own Google Drive',
-  'Installs on your phone, works offline',
 ]
 
 export default function Landing() {

@@ -85,6 +85,10 @@ export const EV = {
   saveCloud:    'save_cv_drive',
   openHistory:  'open_history_cv',
   refine:       'refine_cv',
+  letterStart:  'cover_letter_start',
+  letterOk:     'cover_letter_success',
+  letterFail:   'cover_letter_failure',
+  downloadLetter: 'download_cover_letter',
   installPWA:   'pwa_install',
   keySaved:     'gemini_key_saved',
 }

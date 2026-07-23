@@ -139,22 +139,36 @@ export async function getCV(id) {
 }
 
 /**
- * Creates or updates a CV.
+ * Creates or updates a CV. A cover letter (`coverLetterSource`) is stored in
+ * the same file, so a CV and its matching letter travel together as one
+ * "application pack". Passing `coverLetterSource: undefined` on an update
+ * leaves any existing letter untouched.
  * @returns the index entry (with its generated id).
  */
-export async function saveCV({ id, title, template, targetJob, source, thumbnail }) {
+export async function saveCV({ id, title, template, targetJob, source, thumbnail, coverLetterSource }) {
   const { entries } = await loadIndex()
   const now = new Date().toISOString()
 
-  const content = { title, template, targetJob, source, thumbnail, updatedAt: now }
   let entry = id ? entries.find(e => e.id === id) : null
 
   if (entry) {
-    await updateFile(entry.fileId, { ...content, createdAt: entry.createdAt })
-    Object.assign(entry, { title, template, targetJob, thumbnail, updatedAt: now })
+    // Preserve fields the caller did not send (e.g. update the letter only).
+    const existing = (await readFile(entry.fileId)) || {}
+    const merged = {
+      title, template, targetJob, source, thumbnail,
+      coverLetterSource: coverLetterSource !== undefined ? coverLetterSource : existing.coverLetterSource,
+      createdAt: entry.createdAt,
+      updatedAt: now,
+    }
+    await updateFile(entry.fileId, merged)
+    Object.assign(entry, { title, template, targetJob, thumbnail, updatedAt: now, hasLetter: Boolean(merged.coverLetterSource) })
   } else {
     const newId = `cv_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
-    const created = await createFile(`${newId}.json`, { ...content, createdAt: now })
+    const created = await createFile(`${newId}.json`, {
+      title, template, targetJob, source, thumbnail,
+      coverLetterSource: coverLetterSource || '',
+      createdAt: now, updatedAt: now,
+    })
     entry = {
       id: newId,
       fileId: created.id,
@@ -162,6 +176,7 @@ export async function saveCV({ id, title, template, targetJob, source, thumbnail
       template,
       targetJob,
       thumbnail,
+      hasLetter: Boolean(coverLetterSource),
       createdAt: now,
       updatedAt: now,
     }
@@ -212,6 +227,7 @@ export async function repairIndex() {
       template: data.template || '',
       targetJob: data.targetJob || '',
       thumbnail: data.thumbnail || '',
+      hasLetter: Boolean(data.coverLetterSource),
       createdAt: data.createdAt || f.modifiedTime,
       updatedAt: data.updatedAt || f.modifiedTime,
     })

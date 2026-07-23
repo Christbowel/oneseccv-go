@@ -1,16 +1,30 @@
 import { useState } from 'react'
 
-const QUICK_EDITS = [
-  'Make it fit on a single page',
-  'Make the bullets more concrete and quantified',
-  'Translate the whole CV to French',
-  'Emphasise the skills the job description asks for',
-]
+const QUICK_EDITS = {
+  cv: [
+    'Make it fit on a single page',
+    'Make the bullets more concrete and quantified',
+    'Translate the whole CV to French',
+    'Emphasise the skills the job description asks for',
+  ],
+  letter: [
+    'Make it warmer and more personal',
+    'Make it shorter and punchier',
+    'Translate the letter to French',
+    'Emphasise my motivation for this company',
+  ],
+}
 
-export default function CVPreview({ pages, onDownload, onRefine, loading, canRefine }) {
+export default function CVPreview({
+  doc, onDocChange, cvPages, letterPages, hasLetter,
+  onGenerateLetter, onDownload, onRefine, loading, canRefine,
+}) {
   const [zoom, setZoom] = useState(100)
   const [sheet, setSheet] = useState(false)
   const [instruction, setInstruction] = useState('')
+
+  const isLetter = doc === 'letter'
+  const pages = isLetter ? letterPages : cvPages
 
   const submitRefine = async (text) => {
     const value = (text ?? instruction).trim()
@@ -23,6 +37,24 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
   return (
     <div className="flex h-full flex-col overflow-hidden">
 
+      {/* ── Document switch: CV ⇄ Cover letter ── */}
+      <div className="flex shrink-0 items-center justify-center gap-2 px-3 pt-3"
+        style={{ background: 'rgba(8,12,24,0.95)' }}>
+        <div className="grid w-full max-w-sm grid-cols-2 gap-1 rounded-xl p-1"
+          style={{ background: '#0A0F1E', border: '1px solid #1A2040' }}>
+          <DocTab active={!isLetter} onClick={() => onDocChange('cv')} icon="📄" label="CV" />
+          {hasLetter ? (
+            <DocTab active={isLetter} onClick={() => onDocChange('letter')} icon="✉" label="Cover letter" />
+          ) : (
+            <button onClick={onGenerateLetter} disabled={loading || !canRefine}
+              className="flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-40"
+              style={{ background: 'rgba(30,111,255,0.12)', border: '1px solid rgba(30,111,255,0.4)', color: '#5B8FFF' }}>
+              <span aria-hidden="true">✉</span> Generate letter
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ── Toolbar ── */}
       <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-2 sm:px-5 sm:py-3"
         style={{ background: 'rgba(8,12,24,0.95)', borderBottom: '1px solid #1A2040' }}>
@@ -31,7 +63,6 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
           {pages.length} page{pages.length > 1 ? 's' : ''}
         </span>
 
-        {/* Zoom — compact on mobile */}
         <div className="flex items-center gap-1.5">
           <ZoomButton label="−" onClick={() => setZoom(z => Math.max(50, z - 25))} />
           <span className="w-11 text-center font-mono text-xs" style={{ color: '#FF6B1A' }}>{zoom}%</span>
@@ -73,7 +104,9 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
             <div className="flex flex-col items-center gap-3">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
                 style={{ borderColor: 'rgba(255,107,26,0.3)', borderTopColor: '#FF6B1A' }} />
-              <p className="font-mono text-xs" style={{ color: '#FF6B1A' }}>Compiling…</p>
+              <p className="font-mono text-xs" style={{ color: '#FF6B1A' }}>
+                {isLetter && letterPages.length === 0 ? 'Writing your letter…' : 'Compiling…'}
+              </p>
             </div>
           </div>
         )}
@@ -94,7 +127,7 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
         <button onClick={onDownload} disabled={loading}
           className="w-full rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40"
           style={{ background: '#FF6B1A', color: '#fff', boxShadow: '0 0 22px rgba(255,107,26,0.35)' }}>
-          ↓ Download PDF
+          ↓ Download {isLetter ? 'letter' : 'CV'} PDF
         </button>
       </div>
 
@@ -107,14 +140,14 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
             onClick={e => e.stopPropagation()}>
 
             <h3 className="mb-1 text-lg font-bold" style={{ fontFamily: 'Syne, sans-serif', color: '#F5F5F5' }}>
-              Refine your CV
+              Refine your {isLetter ? 'cover letter' : 'CV'}
             </h3>
             <p className="mb-4 text-sm" style={{ color: '#A0A8C0' }}>
               Describe the change in plain words — the AI rewrites and recompiles.
             </p>
 
             <div className="mb-3 flex flex-wrap gap-2">
-              {QUICK_EDITS.map(q => (
+              {QUICK_EDITS[isLetter ? 'letter' : 'cv'].map(q => (
                 <button key={q} onClick={() => submitRefine(q)}
                   className="rounded-full px-3 py-1.5 text-left text-xs transition-colors active:scale-95"
                   style={{ background: '#0A0F1E', border: '1px solid #1A2040', color: '#A0A8C0' }}>
@@ -124,7 +157,7 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
             </div>
 
             <textarea rows={3} autoFocus value={instruction} onChange={e => setInstruction(e.target.value)}
-              placeholder="e.g. move the projects section above education"
+              placeholder={isLetter ? 'e.g. mention I can start immediately' : 'e.g. move the projects section above education'}
               className="textarea-field w-full" />
 
             <div className="mt-4 flex gap-3">
@@ -143,6 +176,20 @@ export default function CVPreview({ pages, onDownload, onRefine, loading, canRef
         </div>
       )}
     </div>
+  )
+}
+
+function DocTab({ active, onClick, icon, label }) {
+  return (
+    <button onClick={onClick}
+      className="flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition-all active:scale-[0.98]"
+      style={{
+        background: active ? 'rgba(255,107,26,0.14)' : 'transparent',
+        border: active ? '1px solid rgba(255,107,26,0.4)' : '1px solid transparent',
+        color: active ? '#fff' : '#A0A8C0',
+      }}>
+      <span aria-hidden="true">{icon}</span>{label}
+    </button>
   )
 }
 

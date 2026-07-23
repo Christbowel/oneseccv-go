@@ -1,4 +1,5 @@
 import { GEMINI_MODEL, GEMINI_API_BASE } from '../config'
+import { COVER_LETTER_TEMPLATE } from '../lib/coverLetterTemplate'
 
 // ── Gemini, called straight from the browser ────────────────
 // The key is the user's own and never leaves their device: there is no
@@ -53,6 +54,48 @@ STRICT TECHNICAL RULES:
 - Use standard dashes (- or --) for date ranges.
 - Do not invent any information not present in the user data.
 - Rewrite bullets as impact statements: strong action verb, scope, measurable result when the data provides one.`
+
+  return callGeminiWithRetry(apiKey, prompt)
+}
+
+/**
+ * Generates a cover letter tailored to the SAME job offer the CV targets.
+ * It reads the candidate's real details out of the already-generated CV, so the
+ * contact block and the claims stay consistent between the two documents.
+ */
+export async function generateCoverLetter(apiKey, { cvSource, jobDescription, targetJob, instruction, language }) {
+  const offerBlock = jobDescription?.trim()
+    ? `
+
+JOB DESCRIPTION THE CANDIDATE IS APPLYING TO:
+"""
+${jobDescription.trim().slice(0, 12000)}
+"""`
+    : ''
+
+  const langLine = language?.trim()
+    ? `\n- Write the letter in this language: ${language.trim()}.`
+    : '\n- Write the letter in the same language as the CV.'
+
+  const prompt = `You are the career-writing expert of OneSecCV. Write a compelling, specific cover letter.
+
+THE CANDIDATE'S CV (LaTeX — extract their real name, contact details and experience from it):
+${cvSource}
+
+TARGET POSITION: ${targetJob || '(infer it from the job description)'}
+ADDITIONAL INSTRUCTIONS: ${instruction || '(none)'}${offerBlock}
+
+LATEX TEMPLATE TO FILL:
+${COVER_LETTER_TEMPLATE}
+
+STRICT RULES:
+- Return ONLY the raw LaTeX code, no markdown or explanation.
+- Start with \\documentclass and end with \\end{document}.
+- Fill the sender block with the candidate's REAL name, email, phone and city taken from the CV. If a detail is genuinely absent, remove that item rather than inventing it.
+- Extract the company name and the exact job title from the job description. If the company is not stated, write "the hiring team" and drop the company line.
+- Three to four short paragraphs: why this role/company, then a concrete match between the candidate's real experience and the offer's key requirements (echo the offer's own terminology), then a confident closing with a call to action.
+- Never invent experience, employers, numbers or skills the CV does not support.
+- Escape special LaTeX characters (&, %, $, #, _). Keep it to a single page.${langLine}`
 
   return callGeminiWithRetry(apiKey, prompt)
 }

@@ -16,7 +16,7 @@ import CVPreview      from './components/CVPreview'
 import LoadingOverlay from './components/LoadingOverlay'
 import InstallPrompt  from './components/InstallPrompt'
 
-import { generateCV, fixCompileError, refineCV } from './api/gemini'
+import { generateCV, generateCoverLetter, fixCompileError, refineCV } from './api/gemini'
 import { compilePDF, compilePreview, getTemplate, health, listTemplates } from './lib/api'
 import * as drive from './lib/drive'
 import { NeedsSignIn } from './lib/googleAuth'
@@ -74,6 +74,11 @@ function Workspace() {
   const [historyKey, setHistoryKey]       = useState(0)
   const [cvCount, setCvCount]             = useState(null)
 
+  // Cover letter (the matching half of the application pack).
+  const [letterSource, setLetterSource]   = useState('')
+  const [letterPages, setLetterPages]     = useState([])
+  const [previewDoc, setPreviewDoc]       = useState('cv') // 'cv' | 'letter'
+
   // ── Boot ──
   useEffect(() => {
     health().then(h => setCompilerReady(Boolean(h)))
@@ -116,7 +121,9 @@ function Workspace() {
   }, [showToast])
 
   // ── Save to the user's Drive ──
-  const saveToDrive = useCallback(async (source, pages, { id } = {}) => {
+  // `extra` carries fields beyond the CV itself (e.g. coverLetterSource) so a
+  // letter is stored in the same "application pack" entry as its CV.
+  const saveToDrive = useCallback(async (source, pages, { id, extra } = {}) => {
     try {
       const thumbnail = await makeThumbnail(pages?.[0])
       const entry = await drive.saveCV({
@@ -126,6 +133,7 @@ function Workspace() {
         targetJob: goalJob.trim(),
         source,
         thumbnail,
+        ...extra,
       })
       setCurrentCvId(entry.id)
       setHistoryKey(k => k + 1)
@@ -169,6 +177,10 @@ function Workspace() {
           setLatexSource(source)
           setPreviewPages(preview.pages)
           setCurrentCvId(null)
+          // A fresh CV invalidates any letter written for the previous one.
+          setLetterSource('')
+          setLetterPages([])
+          setPreviewDoc('cv')
           setScreen('preview')
           setResultMsg({ type: 'success', text: '✨ CV generated successfully!' })
           showToast('success', '✨ CV ready — saving to your Drive…')
@@ -197,32 +209,87 @@ function Workspace() {
     }
   }, [apiKey, selectedTpl, compilerReady, goalJob, jobDesc, showToast, saveToDrive])
 
-  // ── Refine an existing CV ──
+  // ── Refine whichever document is on screen ──
   const handleRefine = useCallback(async (instruction) => {
     if (!apiKey) { showToast('error', 'Add your Gemini key in Settings to refine.'); setScreen('settings'); return }
+    const isLetter = previewDoc === 'letter'
+    const current = isLetter ? letterSource : latexSource
+    if (!current) return
+
     setPreviewLoading(true)
     try {
-      const source = await refineCV(apiKey, latexSource, instruction)
+      const source = await refineCV(apiKey, current, instruction)
       const preview = await compilePreview(source)
-      setLatexSource(source)
-      setPreviewPages(preview.pages)
+      if (isLetter) {
+        setLetterSource(source)
+        setLetterPages(preview.pages)
+        saveToDrive(latexSource, previewPages, { id: currentCvId, extra: { coverLetterSource: source } })
+      } else {
+        setLatexSource(source)
+        setPreviewPages(preview.pages)
+        saveToDrive(source, preview.pages, { id: currentCvId })
+      }
       showToast('success', 'Changes applied!')
-      track(EV.refine)
-      saveToDrive(source, preview.pages, { id: currentCvId })
+      track(EV.refine, { doc: isLetter ? 'letter' : 'cv' })
     } catch (e) {
       showToast('error', String(e?.message || e))
     } finally {
       setPreviewLoading(false)
     }
-  }, [apiKey, latexSource, currentCvId, showToast, saveToDrive])
+  }, [apiKey, previewDoc, letterSource, latexSource, previewPages, currentCvId, showToast, saveToDrive])
 
-  // ── Download ──
-  const handleDownload = useCallback(async () => {
+  // ── Generate the matching cover letter ──
+  const handleGenerateLetter = useCallback(async () => {
+    if (!apiKey) { showToast('error', 'Add your Gemini key in Settings first.'); setScreen('settings'); return }
     if (!latexSource) return
+
+    setPreviewLoading(true)
+    track(EV.letterStart, { has_job_description: jobDesc.trim().length > 0 })
+    try {
+      let source = await generateCoverLetter(apiKey, {
+        cvSource: latexSource,
+        jobDescription: jobDesc,
+        targetJob: goalJob,
+      })
+
+      const maxAttempts = 3
+      let lastError = ''
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const preview = await compilePreview(source)
+          setLetterSource(source)
+          setLetterPages(preview.pages)
+          setPreviewDoc('letter')
+          showToast('success', '✉ Cover letter ready — saved to your Drive.')
+          track(EV.letterOk, { attempts: attempt })
+          saveToDrive(latexSource, previewPages, { id: currentCvId, extra: { coverLetterSource: source } })
+          return
+        } catch (compileErr) {
+          lastError = compileErr.message
+          if (attempt === maxAttempts) break
+          try { source = await fixCompileError(apiKey, source, lastError) } catch { break }
+        }
+      }
+      showToast('error', `Cover letter compilation failed.\n\n${lastError}`)
+      track(EV.letterFail, { reason: 'compile' })
+    } catch (e) {
+      showToast('error', String(e?.message || e))
+      track(EV.letterFail, { reason: 'ai' })
+    } finally {
+      setPreviewLoading(false)
+    }
+  }, [apiKey, latexSource, jobDesc, goalJob, previewPages, currentCvId, showToast, saveToDrive])
+
+  // ── Download (whichever document is on screen) ──
+  const handleDownload = useCallback(async () => {
+    const isLetter = previewDoc === 'letter'
+    const source = isLetter ? letterSource : latexSource
+    if (!source) return
     setPreviewLoading(true)
     try {
-      const blob = await compilePDF(latexSource)
-      const name = `${(goalJob.trim() || 'cv').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}-oneseccv.pdf`
+      const blob = await compilePDF(source)
+      const slug = (goalJob.trim() || 'application').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)
+      const name = `${slug}-${isLetter ? 'cover-letter' : 'cv'}-oneseccv.pdf`
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -231,18 +298,21 @@ function Workspace() {
       a.click()
       a.remove()
       setTimeout(() => URL.revokeObjectURL(url), 4000)
-      track(EV.download, { template: selectedTpl || 'unknown' })
+      track(isLetter ? EV.downloadLetter : EV.download, { template: selectedTpl || 'unknown' })
     } catch (e) {
       showToast('error', String(e?.message || e))
     } finally {
       setPreviewLoading(false)
     }
-  }, [latexSource, goalJob, selectedTpl, showToast])
+  }, [previewDoc, letterSource, latexSource, goalJob, selectedTpl, showToast])
 
-  // ── Open one from history ──
+  // ── Open one from history (CV, plus its letter if the pack has one) ──
   const handleOpenFromHistory = useCallback(async (cv) => {
     setPreviewLoading(true)
     setScreen('preview')
+    setPreviewDoc('cv')
+    setLetterSource('')
+    setLetterPages([])
     try {
       const preview = await compilePreview(cv.source)
       setLatexSource(cv.source)
@@ -250,6 +320,14 @@ function Workspace() {
       setCurrentCvId(cv.id)
       if (cv.targetJob) setGoalJob(cv.targetJob)
       if (cv.template) setSelectedTpl(cv.template)
+
+      // Lazily compile the stored letter so the CV shows without waiting.
+      if (cv.coverLetterSource) {
+        setLetterSource(cv.coverLetterSource)
+        compilePreview(cv.coverLetterSource)
+          .then(lp => setLetterPages(lp.pages))
+          .catch(() => { /* letter stays regenerable via the button */ })
+      }
     } catch (e) {
       showToast('error', `Could not re-render this CV: ${e.message}`)
       setScreen('history')
@@ -363,8 +441,18 @@ function Workspace() {
         )}
 
         {screen === 'preview' && (
-          <CVPreview pages={previewPages} onDownload={handleDownload} onRefine={handleRefine}
-            loading={previewLoading} canRefine={Boolean(apiKey)} />
+          <CVPreview
+            doc={previewDoc}
+            onDocChange={setPreviewDoc}
+            cvPages={previewPages}
+            letterPages={letterPages}
+            hasLetter={Boolean(letterSource)}
+            onGenerateLetter={handleGenerateLetter}
+            onDownload={handleDownload}
+            onRefine={handleRefine}
+            loading={previewLoading}
+            canRefine={Boolean(apiKey)}
+          />
         )}
 
         {screen === 'history' && (
@@ -438,7 +526,7 @@ function Toast({ type, text, onClose }) {
     // Top on phones — the bottom of the screen belongs to the nav and the
     // primary CTA. Bottom-right on desktop, where that is the convention.
     <div className="animate-slide-up fixed left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 items-start gap-3 rounded-xl p-4
-                    top-[calc(env(safe-area-inset-top)+7rem)]
+                    top-[calc(env(safe-area-inset-top)+10.5rem)]
                     lg:bottom-6 lg:left-auto lg:right-6 lg:top-auto lg:translate-x-0"
       style={{
         background: isErr ? 'rgba(40,10,12,0.96)' : 'rgba(28,16,6,0.96)',

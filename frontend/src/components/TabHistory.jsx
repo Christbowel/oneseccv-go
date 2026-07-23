@@ -111,7 +111,15 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">{cv.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-white">{cv.title}</p>
+                  {cv.hasLetter && (
+                    <span className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] tracking-wide"
+                      style={{ color: '#5B8FFF', background: 'rgba(30,111,255,0.12)', border: '1px solid rgba(30,111,255,0.3)' }}>
+                      ✉ LETTER
+                    </span>
+                  )}
+                </div>
                 <p className="mt-0.5 truncate font-mono text-[11px]" style={{ color: '#7A83A0' }}>
                   {cv.template || 'template'} · {formatDate(cv.updatedAt)}
                 </p>
