@@ -138,36 +138,74 @@ STRICT TECHNICAL RULES:
 async function callGeminiWithRetry(apiKey, prompt, maxRetries = 3) {
   const waits = [5000, 10000, 15000]
 
+  if (!apiKey) {
+    throw new Error('No AI key yet. Open Settings and paste your free Google AI key to start.')
+  }
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     let res
     try {
       res = await geminiFetch(apiKey, { contents: [{ role: 'user', parts: [{ text: prompt }] }] })
     } catch {
-      throw new Error('Cannot reach the AI engine. Check your connection.')
+      throw new Error('Could not reach the AI. Check your internet connection and try again.')
     }
 
+    // Too many requests for the free tier: back off, then give a calm message.
     if (res.status === 429) {
       if (attempt < maxRetries - 1) { await sleep(waits[attempt]); continue }
-      throw new Error('Gemini rate limit reached. Wait a minute and try again.')
+      throw new Error('The AI is busy (free-tier limit reached). Wait about a minute, then try again.')
     }
 
-    if (res.status === 400 || res.status === 403) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.error?.message || 'Your Gemini API key was rejected. Check it in Settings.')
+    // A bad or unauthorised key. Always point the user to the one fix they can act on.
+    if (res.status === 400 || res.status === 401 || res.status === 403) {
+      throw new Error(await keyProblemMessage(res))
+    }
+
+    // Google's side is down or overloaded — nothing the user did wrong.
+    if (res.status === 500 || res.status === 503) {
+      if (attempt < maxRetries - 1) { await sleep(waits[attempt]); continue }
+      throw new Error('The AI service is temporarily unavailable. Please try again in a moment.')
     }
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.error?.message || `AI engine error: ${res.status}`)
+      throw new Error('The AI could not complete this request right now. Please try again.')
     }
 
-    const data = await res.json()
+    const data = await res.json().catch(() => null)
+    if (!data) throw new Error('The AI sent back something unreadable. Please try again.')
+
+    // The model can refuse content for safety reasons instead of erroring.
+    const blocked = data.promptFeedback?.blockReason || data.candidates?.[0]?.finishReason
     const text = data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || ''
-    if (!text) throw new Error('Empty AI engine response')
+    if (!text) {
+      if (blocked && blocked !== 'STOP') {
+        throw new Error('The AI declined to answer this one. Rephrase your details or instructions and try again.')
+      }
+      throw new Error('The AI returned an empty answer. Please try again.')
+    }
     return extractLatexBlock(text)
   }
 
-  throw new Error('Rate limit exceeded after retries')
+  throw new Error('The AI is busy right now. Wait a minute, then try again.')
+}
+
+/**
+ * Turns a 400/401/403 from Gemini into a message a non-technical user can act
+ * on. Almost every cause here comes back to the API key, so we always steer
+ * them to Settings rather than showing Google's raw wording.
+ */
+async function keyProblemMessage(res) {
+  const err = await res.json().catch(() => ({}))
+  const reason = err?.error?.status || ''
+  const raw = String(err?.error?.message || '').toLowerCase()
+
+  if (raw.includes('api key not valid') || raw.includes('api_key_invalid') || reason === 'INVALID_ARGUMENT') {
+    return 'Your AI key was not accepted. Open Settings and paste a fresh key from Google AI Studio (it is free and takes a minute).'
+  }
+  if (reason === 'PERMISSION_DENIED' || res.status === 403) {
+    return 'Your AI key was refused. Make sure you copied the whole key from Google AI Studio, then paste it again in Settings.'
+  }
+  return 'There is a problem with your AI key. Open Settings and paste a new free key from Google AI Studio.'
 }
 
 function extractLatexBlock(raw) {

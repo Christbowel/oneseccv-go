@@ -147,7 +147,7 @@ function Workspace() {
       return entry
     } catch (e) {
       if (handleAuthError(e)) return null
-      showToast('error', `Saved locally only - Drive sync failed: ${e.message}`)
+      showToast('error', 'Your CV is ready on screen, but saving it to your Google Drive failed. You can still download it, and it will save next time.')
       return null
     }
   }, [goalJob, selectedTpl, handleAuthError, showToast])
@@ -201,8 +201,9 @@ function Workspace() {
         }
       }
 
-      setResultMsg({ type: 'error', text: `❌ Compilation failed after ${maxAttempts} attempts.\n\n${lastError}` })
-      showToast('error', 'Compilation failed - try another template.')
+      console.warn('LaTeX compile failed:', lastError)
+      setResultMsg({ type: 'error', text: '❌ We could not typeset this CV after a few tries. Pick a different template in the Style tab, or adjust your details, and generate again.' })
+      showToast('error', 'Could not build the CV. Try another template in Style.')
       track(EV.generateFail, { reason: 'compile', template: selectedTpl })
     } catch (e) {
       const msg = String(e?.message || e)
@@ -275,7 +276,8 @@ function Workspace() {
           try { source = await fixCompileError(apiKey, source, lastError) } catch { break }
         }
       }
-      showToast('error', `Cover letter compilation failed.\n\n${lastError}`)
+      console.warn('Cover-letter compile failed:', lastError)
+      showToast('error', 'We could not build the cover letter this time. Please try again in a moment.')
       track(EV.letterFail, { reason: 'compile' })
     } catch (e) {
       showToast('error', String(e?.message || e))
@@ -418,6 +420,7 @@ function Workspace() {
           <div className="flex h-full flex-col">
             <div className="shrink-0 px-4 pt-4 sm:px-6">
               <div className="mx-auto w-full max-w-3xl space-y-3">
+                {!apiKey && <NoKeyBanner onOpen={() => setScreen('settings')} />}
                 <TargetPanel
                   goalJob={goalJob} setGoalJob={setGoalJob}
                   jobDesc={jobDesc} setJobDesc={setJobDesc}
@@ -495,6 +498,33 @@ function Splash() {
       </div>
       <p className="font-mono text-xs tracking-widest" style={{ color: '#FF6B1A' }}>ONESECCV</p>
     </div>
+  )
+}
+
+// Shown at the top of Create until the user adds their free AI key. It is the
+// one thing a new user must do, so we make it feel small and easy, not a wall.
+function NoKeyBanner({ onOpen }) {
+  return (
+    <button onClick={onOpen}
+      className="animate-fade-in flex w-full items-center gap-3 rounded-xl p-3.5 text-left transition-all active:scale-[0.99]"
+      style={{ background: 'rgba(255,107,26,0.08)', border: '1px solid rgba(255,107,26,0.35)' }}>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base"
+        style={{ background: 'rgba(255,107,26,0.14)', border: '1px solid rgba(255,107,26,0.3)' }}>
+        🔑
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-white" style={{ fontFamily: 'Ubuntu, sans-serif' }}>
+          One quick step to start
+        </p>
+        <p className="mt-0.5 text-xs leading-snug" style={{ color: '#CDB6A0' }}>
+          Add your free AI key in Settings and paste it. It takes about a minute and it is easy.
+        </p>
+      </div>
+      <span className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold"
+        style={{ background: '#FF6B1A', color: '#fff' }}>
+        Open Settings
+      </span>
+    </button>
   )
 }
 

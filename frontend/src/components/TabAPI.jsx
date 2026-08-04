@@ -13,9 +13,8 @@ export default function TabAPI({ currentKey, onSave, onClear, showToast }) {
 
   const handleSave = async () => {
     const trimmed = key.trim()
-    if (!trimmed) return
-    if (!trimmed.startsWith('AIza')) {
-      showToast('error', 'A Gemini key normally starts with "AIza". Double-check what you pasted.')
+    if (!trimmed) {
+      showToast('error', 'Paste your API key in the field first, then tap Activate.')
       return
     }
     setSaving(true)
@@ -101,7 +100,7 @@ export default function TabAPI({ currentKey, onSave, onClear, showToast }) {
             <input id="gemini-key"
               type={visible ? 'text' : 'password'}
               inputMode="text" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false"
-              placeholder="AIza…"
+              placeholder="Paste your key here"
               value={key}
               onChange={e => setKey(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
