@@ -91,4 +91,7 @@ export const EV = {
   downloadLetter: 'download_cover_letter',
   installPWA:   'pwa_install',
   keySaved:     'gemini_key_saved',
+  editOpen:     'latex_editor_open',
+  editRecompile:'latex_recompile',
+  editAI:       'latex_quick_edit_ai',
 }

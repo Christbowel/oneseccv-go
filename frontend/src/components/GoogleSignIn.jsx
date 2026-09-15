@@ -36,7 +36,7 @@ export default function GoogleSignIn({ onSuccess, label = 'Continue with Google'
       {busy ? (
         <>
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
-          Signing you in…
+          Signing you in...
         </>
       ) : (
         <>

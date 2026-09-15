@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import Landing from './screens/Landing'
@@ -17,7 +17,7 @@ import LoadingOverlay from './components/LoadingOverlay'
 import InstallPrompt  from './components/InstallPrompt'
 import Onboarding     from './components/Onboarding'
 
-import { generateCV, generateCoverLetter, fixCompileError, refineCV } from './api/gemini'
+import { generateCV, generateCoverLetter, fixCompileError, quickEditLatex } from './api/gemini'
 import { compilePDF, compilePreview, getTemplate, health, listTemplates } from './lib/api'
 import * as drive from './lib/drive'
 import { NeedsSignIn } from './lib/googleAuth'
@@ -80,6 +80,13 @@ function Workspace() {
   const [letterPages, setLetterPages]     = useState([])
   const [previewDoc, setPreviewDoc]       = useState('cv') // 'cv' | 'letter'
 
+  // LaTeX editor. A draft is the editor text of one document, which can be
+  // ahead of its last compiled source. Each draft remembers the source it was
+  // edited from (`base`), so a newly generated or reopened document starts
+  // from its own source instead of an old draft.
+  const [drafts, setDrafts]           = useState({}) // { cv?, letter? }: { base, text }
+  const [recompiling, setRecompiling] = useState(false)
+
   const [showOnboarding, setShowOnboarding] = useState(
     () => !localStorage.getItem(LS.seenOnboarding),
   )
@@ -101,6 +108,14 @@ function Workspace() {
   useEffect(() => { localStorage.setItem(LS.template, selectedTpl) }, [selectedTpl])
   useEffect(() => { localStorage.setItem(LS.goalJob, goalJob) }, [goalJob])
   useEffect(() => { localStorage.setItem(LS.jobDesc, jobDesc) }, [jobDesc])
+
+  const compiledSource = previewDoc === 'letter' ? letterSource : latexSource
+  const draft          = drafts[previewDoc]
+  const editorSource   = draft?.base === compiledSource ? draft.text : compiledSource
+  const editorDirty    = editorSource !== compiledSource
+  // Latest compiled sources, for drafts written after an await.
+  const compiledRef = useRef({})
+  compiledRef.current = { cv: latexSource, letter: letterSource }
 
   const showToast = useCallback((type, text) => {
     setToast({ type, text })
@@ -188,7 +203,7 @@ function Workspace() {
           setPreviewDoc('cv')
           setScreen('preview')
           setResultMsg({ type: 'success', text: '✨ CV generated successfully!' })
-          showToast('success', '✨ CV ready - saving to your Drive…')
+          showToast('success', '✨ CV ready - saving to your Drive...')
           track(EV.generateOk, { template: selectedTpl, attempts: attempt })
           saveToDrive(source, preview.pages)
           return
@@ -215,18 +230,25 @@ function Workspace() {
     }
   }, [apiKey, selectedTpl, compilerReady, goalJob, jobDesc, showToast, saveToDrive])
 
-  // ── Refine whichever document is on screen ──
-  const handleRefine = useCallback(async (instruction) => {
-    if (!apiKey) { showToast('error', 'Add your Gemini key in Settings to refine.'); setScreen('settings'); return }
-    const isLetter = previewDoc === 'letter'
-    const current = isLetter ? letterSource : latexSource
-    if (!current) return
+  // ── LaTeX editor ──
+  const setDraft = useCallback((doc, text) => {
+    setDrafts(ds => ({ ...ds, [doc]: { base: compiledRef.current[doc], text } }))
+  }, [])
 
-    setPreviewLoading(true)
+  const handleEditorChange = useCallback((text) => setDraft(previewDoc, text), [setDraft, previewDoc])
+
+  // Compiles the editor text as-is. On failure the text stays in the editor and
+  // the pdflatex message is shown: no AI repair here, the user is in charge.
+  const handleRecompile = useCallback(async () => {
+    const doc = previewDoc
+    const source = editorSource
+    const previousSource = compiledSource
+    if (!source.trim()) return
+
+    setRecompiling(true)
     try {
-      const source = await refineCV(apiKey, current, instruction)
       const preview = await compilePreview(source)
-      if (isLetter) {
+      if (doc === 'letter') {
         setLetterSource(source)
         setLetterPages(preview.pages)
         saveToDrive(latexSource, previewPages, { id: currentCvId, extra: { coverLetterSource: source } })
@@ -235,14 +257,34 @@ function Workspace() {
         setPreviewPages(preview.pages)
         saveToDrive(source, preview.pages, { id: currentCvId })
       }
-      showToast('success', 'Changes applied!')
-      track(EV.refine, { doc: isLetter ? 'letter' : 'cv' })
+      // Typing done while pdflatex ran stays in the editor, on top of the new source.
+      setDrafts(ds => (ds[doc]?.base === previousSource
+        ? { ...ds, [doc]: { base: source, text: ds[doc].text } }
+        : ds))
+      showToast('success', 'Preview updated.')
+      track(EV.editRecompile, { doc, ok: true })
+    } catch (e) {
+      showToast('error', `Compile error:\n${e?.message || e}`)
+      track(EV.editRecompile, { doc, ok: false })
+    } finally {
+      setRecompiling(false)
+    }
+  }, [previewDoc, editorSource, compiledSource, latexSource, previewPages, currentCvId, saveToDrive, showToast])
+
+  // "Quick edit with AI": the answer replaces the editor text; the user recompiles.
+  const handleQuickEdit = useCallback(async (instruction) => {
+    if (!apiKey) { showToast('error', 'Add your Gemini key in Settings to use AI edits.'); return false }
+    const doc = previewDoc
+    try {
+      setDraft(doc, await quickEditLatex(apiKey, editorSource, instruction))
+      track(EV.editAI, { doc, ok: true })
+      return true
     } catch (e) {
       showToast('error', String(e?.message || e))
-    } finally {
-      setPreviewLoading(false)
+      track(EV.editAI, { doc, ok: false })
+      return false
     }
-  }, [apiKey, previewDoc, letterSource, latexSource, previewPages, currentCvId, showToast, saveToDrive])
+  }, [apiKey, previewDoc, editorSource, setDraft, showToast])
 
   // ── Generate the matching cover letter ──
   const handleGenerateLetter = useCallback(async () => {
@@ -290,7 +332,8 @@ function Workspace() {
   // ── Download (whichever document is on screen) ──
   const handleDownload = useCallback(async () => {
     const isLetter = previewDoc === 'letter'
-    const source = isLetter ? letterSource : latexSource
+    // The editor text, compiled or not: /compile/pdf builds it from scratch.
+    const source = editorSource
     if (!source) return
     setPreviewLoading(true)
     try {
@@ -311,7 +354,7 @@ function Workspace() {
     } finally {
       setPreviewLoading(false)
     }
-  }, [previewDoc, letterSource, latexSource, goalJob, selectedTpl, showToast])
+  }, [previewDoc, editorSource, goalJob, selectedTpl, showToast])
 
   // ── Open one from history (CV, plus its letter if the pack has one) ──
   const handleOpenFromHistory = useCallback(async (cv) => {
@@ -458,9 +501,14 @@ function Workspace() {
             hasLetter={Boolean(letterSource)}
             onGenerateLetter={handleGenerateLetter}
             onDownload={handleDownload}
-            onRefine={handleRefine}
             loading={previewLoading}
-            canRefine={Boolean(apiKey)}
+            canUseAI={Boolean(apiKey)}
+            source={editorSource}
+            onSourceChange={handleEditorChange}
+            dirty={editorDirty}
+            onRecompile={handleRecompile}
+            recompiling={recompiling}
+            onQuickEdit={handleQuickEdit}
           />
         )}
 

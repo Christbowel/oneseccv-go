@@ -2,15 +2,15 @@ import { useState } from 'react'
 import { LS } from '../config'
 
 const FIELDS = [
-  { key: 'identity',   label: '👤 Identity',            placeholder: 'Full name, date of birth, nationality…',            rows: 2 },
-  { key: 'contact',    label: '📍 Contact & links',      placeholder: 'Email, phone, city, country, LinkedIn, GitHub…',    rows: 2 },
-  { key: 'summary',    label: '💬 Profile summary',      placeholder: 'Describe yourself in 2-3 impactful sentences…',     rows: 3 },
-  { key: 'education',  label: '🎓 Education',            placeholder: 'Degree, school, city, 2020-2023\nHonours, relevant courses…', rows: 4 },
+  { key: 'identity',   label: '👤 Identity',            placeholder: 'Full name, date of birth, nationality...',            rows: 2 },
+  { key: 'contact',    label: '📍 Contact & links',      placeholder: 'Email, phone, city, country, LinkedIn, GitHub...',    rows: 2 },
+  { key: 'summary',    label: '💬 Profile summary',      placeholder: 'Describe yourself in 2-3 impactful sentences...',     rows: 3 },
+  { key: 'education',  label: '🎓 Education',            placeholder: 'Degree, school, city, 2020-2023\nHonours, relevant courses...', rows: 4 },
   { key: 'experience', label: '💼 Work experience',      placeholder: 'Title, company, location, 06/2022-06/2023\n• Achievement 1\n• Achievement 2', rows: 5 },
-  { key: 'projects',   label: '🚀 Projects',             placeholder: 'Project name | link\nDescription, tech stack, impact…', rows: 4 },
-  { key: 'skills',     label: '🛠 Technical skills',     placeholder: 'Go, Python, React, Docker, Kubernetes, PostgreSQL…', rows: 3 },
-  { key: 'languages',  label: '🗣 Languages',            placeholder: 'English (native), French (C1), German (B2)…',       rows: 2 },
-  { key: 'hobbies',    label: '🎨 Interests',            placeholder: 'Open source, photography, chess…',                  rows: 2 },
+  { key: 'projects',   label: '🚀 Projects',             placeholder: 'Project name | link\nDescription, tech stack, impact...', rows: 4 },
+  { key: 'skills',     label: '🛠 Technical skills',     placeholder: 'Go, Python, React, Docker, Kubernetes, PostgreSQL...', rows: 3 },
+  { key: 'languages',  label: '🗣 Languages',            placeholder: 'English (native), French (C1), German (B2)...',       rows: 2 },
+  { key: 'hobbies',    label: '🎨 Interests',            placeholder: 'Open source, photography, chess...',                  rows: 2 },
 ]
 
 const emptyFields = () => Object.fromEntries(FIELDS.map(f => [f.key, '']))
@@ -72,7 +72,7 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
           <div>
             <label className="label" htmlFor="f-instruction">💡 Extra instructions</label>
             <textarea id="f-instruction" rows={2}
-              placeholder="e.g. one page maximum, emphasise leadership, write it in French…"
+              placeholder="e.g. one page maximum, emphasise leadership, write it in French..."
               value={instruction} onChange={e => setInstruction(e.target.value)}
               disabled={isGenerating} className="textarea-field w-full" />
           </div>
@@ -100,7 +100,7 @@ export default function TabManual({ onGenerate, isGenerating, resultMsg }) {
             {isGenerating ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Generating…
+                Generating...
               </span>
             ) : '✨ Generate my CV'}
           </button>

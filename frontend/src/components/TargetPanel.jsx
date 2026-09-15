@@ -54,7 +54,7 @@ export default function TargetPanel({ goalJob, setGoalJob, jobDesc, setJobDesc, 
           <textarea
             rows={7}
             placeholder={
-              'Copy the whole offer here - requirements, responsibilities, stack…\n\n' +
+              'Copy the whole offer here - requirements, responsibilities, stack...\n\n' +
               'The AI mirrors its exact wording, which is what most ATS filters match on.'
             }
             value={jobDesc}

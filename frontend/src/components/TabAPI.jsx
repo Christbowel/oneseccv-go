@@ -9,7 +9,7 @@ export default function TabAPI({ currentKey, onSave, onClear, showToast }) {
   const [visible, setVisible] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
 
-  const masked = currentKey ? `${currentKey.slice(0, 6)}…${currentKey.slice(-4)}` : ''
+  const masked = currentKey ? `${currentKey.slice(0, 6)}...${currentKey.slice(-4)}` : ''
 
   const handleSave = async () => {
     const trimmed = key.trim()
@@ -120,7 +120,7 @@ export default function TabAPI({ currentKey, onSave, onClear, showToast }) {
             color: '#fff',
             boxShadow: key.trim() ? '0 0 22px rgba(255,107,26,0.35)' : 'none',
           }}>
-          {saving ? 'Saving…' : 'Activate'}
+          {saving ? 'Saving...' : 'Activate'}
         </button>
 
         <button onClick={() => setShowPrivacy(true)} className="text-xs underline" style={{ color: '#6C7488' }}>

@@ -115,21 +115,20 @@ Return ONLY the fixed LaTeX code, no markdown.`
   return callGeminiWithRetry(apiKey, prompt)
 }
 
-export async function refineCV(apiKey, source, instruction) {
-  const prompt = `You are the CV expert of OneSecCV.
+/**
+ * Free-form edit from the LaTeX editor's "Quick edit with AI" box. The answer
+ * goes back into the editor; the user recompiles it themselves.
+ */
+export async function quickEditLatex(apiKey, source, instruction) {
+  const prompt = `You are a LaTeX expert. Here is the current document source:
 
-CURRENT LATEX CV SOURCE:
+\`\`\`latex
 ${source}
+\`\`\`
 
-REQUESTED MODIFICATION:
-${instruction}
+Apply this modification: "${instruction}"
 
-STRICT TECHNICAL RULES:
-- Apply the modification and keep everything else identical.
-- Return ONLY the raw LaTeX code, no markdown or explanation.
-- Start with \\documentclass and end with \\end{document}.
-- Escape special LaTeX characters (&, %, $, #, _).
-- Do not invent any information that is not already present.`
+Return ONLY the complete modified LaTeX source. No explanations, no markdown fences. Start with \\documentclass and end with \\end{document}.`
 
   return callGeminiWithRetry(apiKey, prompt)
 }

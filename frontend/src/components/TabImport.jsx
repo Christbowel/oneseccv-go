@@ -52,7 +52,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
               <div className="flex flex-col items-center gap-2">
                 <div className="h-7 w-7 animate-spin rounded-full border-2 border-t-transparent"
                   style={{ borderColor: 'rgba(255,107,26,0.3)', borderTopColor: '#FF6B1A' }} />
-                <p className="text-sm" style={{ color: '#9BA6BC' }}>Extracting text…</p>
+                <p className="text-sm" style={{ color: '#9BA6BC' }}>Extracting text...</p>
               </div>
             ) : fileName ? (
               <div className="flex flex-col items-center gap-1.5">
@@ -87,7 +87,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
             <label className="label">CV text</label>
             <textarea rows={8} value={extracted} onChange={e => setExtracted(e.target.value)}
               disabled={isGenerating}
-              placeholder="Paste everything you have: experience, education, skills…"
+              placeholder="Paste everything you have: experience, education, skills..."
               className="textarea-field w-full" style={{ minHeight: 170 }} />
           </div>
         )}
@@ -108,7 +108,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
         <div>
           <label className="label">Extra instructions <span style={{ color: '#6C7488' }}>(optional)</span></label>
           <textarea rows={3}
-            placeholder="e.g. keep it to one page, emphasise open-source work, write it in French…"
+            placeholder="e.g. keep it to one page, emphasise open-source work, write it in French..."
             value={instruction} onChange={e => setInstruction(e.target.value)} disabled={isGenerating}
             className="textarea-field w-full" />
         </div>
@@ -125,7 +125,7 @@ export default function TabImport({ onGenerate, isGenerating, resultMsg }) {
           <button onClick={() => onGenerate(extracted, instruction)} disabled={!canGenerate}
             className="flex-1 rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40"
             style={{ background: '#FF6B1A', color: '#fff', boxShadow: canGenerate ? '0 0 25px rgba(255,107,26,0.4)' : 'none' }}>
-            {isGenerating ? 'Generating…' : '✨ Generate my CV'}
+            {isGenerating ? 'Generating...' : '✨ Generate my CV'}
           </button>
         </div>
 

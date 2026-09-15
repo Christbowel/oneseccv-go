@@ -132,7 +132,7 @@ export default function TabHistory({ onOpen, refreshKey, showToast }) {
                 <button onClick={() => open(cv.id)} disabled={busyId === cv.id}
                   className="rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
                   style={{ background: '#FF6B1A', color: '#fff' }}>
-                  {busyId === cv.id ? '…' : 'Open'}
+                  {busyId === cv.id ? '...' : 'Open'}
                 </button>
                 <button onClick={() => remove(cv.id)} disabled={busyId === cv.id}
                   aria-label={`Delete ${cv.title}`}
