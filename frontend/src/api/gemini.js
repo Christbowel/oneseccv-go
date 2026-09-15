@@ -59,45 +59,45 @@ STRICT TECHNICAL RULES:
 }
 
 /**
- * Generates a cover letter tailored to the SAME job offer the CV targets.
- * It reads the candidate's real details out of the already-generated CV, so the
- * contact block and the claims stay consistent between the two documents.
+ * Generates a French formal cover letter for the same job offer the CV targets.
+ * The sender details and experience are read from the already-generated CV, so
+ * the two documents stay consistent.
  */
-export async function generateCoverLetter(apiKey, { cvSource, jobDescription, targetJob, instruction, language }) {
-  const offerBlock = jobDescription?.trim()
-    ? `
+export async function generateCoverLetter(apiKey, { cvSource, jobDescription, targetJob, language }) {
+  // The model has no clock: give it today's local date to format.
+  const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD
 
-JOB DESCRIPTION THE CANDIDATE IS APPLYING TO:
-"""
-${jobDescription.trim().slice(0, 12000)}
-"""`
-    : ''
+  const prompt = `You are a professional cover letter writer specialized in the French formal letter format.
 
-  const langLine = language?.trim()
-    ? `\n- Write the letter in this language: ${language.trim()}.`
-    : '\n- Write the letter in the same language as the CV.'
-
-  const prompt = `You are the career-writing expert of OneSecCV. Write a compelling, specific cover letter.
-
-THE CANDIDATE'S CV (LaTeX — extract their real name, contact details and experience from it):
+CV CONTENT:
 ${cvSource}
 
-TARGET POSITION: ${targetJob || '(infer it from the job description)'}
-ADDITIONAL INSTRUCTIONS: ${instruction || '(none)'}${offerBlock}
+TARGET POSITION: ${targetJob?.trim() || 'none'}
+JOB DESCRIPTION: ${jobDescription?.trim().slice(0, 12000) || 'not provided'}
+OUTPUT LANGUAGE: ${language?.trim() || 'same as the CV'}
 
-LATEX TEMPLATE TO FILL:
-${COVER_LETTER_TEMPLATE}
+Fill the following LaTeX template. Replace every {{PLACEHOLDER}} with real content. Rules:
+- SENDER fields from the CV contact section. If address missing, city only.
+- RECIPIENT from the job description. Otherwise "Service Recrutement" + company if known, else "À l'attention du responsable du recrutement".
+- DATE_CITY: candidate's city. DATE: today's date (${today}), format of the output language.
+- POSITION: target position, or "Candidature spontanée" if none.
+- SALUTATION: "Madame, Monsieur," unless recipient name known.
+- PARAGRAPH_1: 3-4 sentences. Why this position, why this company. Reference the job description if provided.
+- PARAGRAPH_2: 4-5 sentences. The 2-3 most relevant experiences from the CV. Quantified. No invented facts.
+- PARAGRAPH_3: 2-3 sentences. What the candidate brings, motivation, availability.
+- Escape special LaTeX characters (&, %, $, #, _).
+- Return ONLY the filled LaTeX source. No explanations, no markdown fences.
 
-STRICT RULES:
-- Return ONLY the raw LaTeX code, no markdown or explanation.
-- Start with \\documentclass and end with \\end{document}.
-- Fill the sender block with the candidate's REAL name, email, phone and city taken from the CV. If a detail is genuinely absent, remove that item rather than inventing it.
-- Extract the company name and the exact job title from the job description. If the company is not stated, write "the hiring team" and drop the company line.
-- Three to four short paragraphs: why this role/company, then a concrete match between the candidate's real experience and the offer's key requirements (echo the offer's own terminology), then a confident closing with a call to action.
-- Never invent experience, employers, numbers or skills the CV does not support.
-- Escape special LaTeX characters (&, %, $, #, _). Keep it to a single page.${langLine}`
+TEMPLATE:
+${COVER_LETTER_TEMPLATE}`
 
-  return callGeminiWithRetry(apiKey, prompt)
+  return spontaneousSubject(await callGeminiWithRetry(apiKey, prompt))
+}
+
+// A literal fill gives "Candidature au poste de Candidature spontanée":
+// keep the subject as just "Candidature spontanée".
+function spontaneousSubject(source) {
+  return source.replace(/Candidature au poste de\s+(Candidature spontan\S*)/i, '$1')
 }
 
 export async function fixCompileError(apiKey, faultyCode, errorLog) {

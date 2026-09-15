@@ -1,75 +1,67 @@
-// A self-contained cover-letter LaTeX template.
+// Cover-letter LaTeX template, French formal letter format (A4).
 //
 // It is embedded in the frontend rather than fetched from the compile server,
-// so adding cover letters needs no server change: the /compile endpoint takes
-// arbitrary LaTeX. Every package used here ships in the server's TeX Live image
-// (latex-base / recommended / extra + lmodern), so it compiles out of the box.
+// so cover letters need no server change: the /compile endpoint takes arbitrary
+// LaTeX. Every package used here ships in the server's TeX Live image
+// (latex-base / recommended + lmodern), so it compiles out of the box.
 //
-// The AI receives this as the reference to fill — same pattern as CV templates.
+// The AI receives this as the reference to fill, same pattern as CV templates.
+// Placeholders: {{SENDER_NAME}}, {{SENDER_ADDRESS}}, {{SENDER_CITY}},
+// {{SENDER_PHONE}}, {{SENDER_EMAIL}}, {{RECIPIENT_COMPANY}}, {{RECIPIENT_NAME}},
+// {{RECIPIENT_ADDRESS}}, {{DATE_CITY}}, {{DATE}}, {{POSITION}}, {{SALUTATION}},
+// {{PARAGRAPH_1}}, {{PARAGRAPH_2}}, {{PARAGRAPH_3}}.
 
 export const COVER_LETTER_TEMPLATE = String.raw`\documentclass[11pt,a4paper]{article}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=2.4cm]{geometry}
+\usepackage[a4paper,margin=2.5cm]{geometry}
 \usepackage{lmodern}
-\usepackage{parskip}
-\usepackage{xcolor}
-\usepackage[hidelinks]{hyperref}
-
-\definecolor{accent}{HTML}{CC4A00}
+\linespread{1.15}
 \setlength{\parindent}{0pt}
-
-\newcommand{\sender}[4]{%
-  {\LARGE\bfseries #1}\par
-  \vspace{2pt}
-  {\color{accent}\rule{\linewidth}{1pt}}\par
-  \vspace{4pt}
-  {\small #2 \quad\textbullet\quad #3 \quad\textbullet\quad #4}\par
-}
+\setlength{\parskip}{0.8em}
+\pagestyle{empty}
 
 \begin{document}
 
-% ── Sender (from the CV) ──
-\sender{Full Name}{email@example.com}{+00 000 000 000}{City, Country}
+% Sender top left; recipient on the right, 1.5cm lower, with the date under it.
+% If a detail is unknown, delete its whole line (including the trailing \\).
+\noindent
+\begin{minipage}[t]{0.48\textwidth}
+\vspace{0pt}
+{\bfseries {{SENDER_NAME}}}\\
+{{SENDER_ADDRESS}}\\
+{{SENDER_CITY}}\\
+{{SENDER_PHONE}}\\
+{{SENDER_EMAIL}}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.42\textwidth}
+\vspace{1.5cm}
+\raggedright
+{{RECIPIENT_COMPANY}}\\
+{{RECIPIENT_NAME}}\\
+{{RECIPIENT_ADDRESS}}
 
-\vspace{18pt}
+\vspace{1em}
+{{DATE_CITY}}, le {{DATE}}
+\end{minipage}
 
-% ── Recipient / company (extracted from the job description) ──
-{\bfseries Company Name}\par
-Hiring Team\par
-\vspace{6pt}
-{\small\itshape Application for the position of: Job Title}\par
+\vspace{1.2cm}
 
-\vspace{14pt}
-{\small \today}\par
-\vspace{18pt}
+% Without a target position, the subject is: Objet : Candidature spontanée
+\textbf{\underline{Objet : Candidature au poste de {{POSITION}}}}
 
-Dear Hiring Manager,
+{{SALUTATION}}
 
-\vspace{6pt}
+{{PARAGRAPH_1}}
 
-% ── Opening: why this role, why this company (2-3 sentences) ──
-Opening paragraph.
+{{PARAGRAPH_2}}
 
-\vspace{6pt}
+{{PARAGRAPH_3}}
 
-% ── Body: 1-2 paragraphs matching the candidate's real experience to the
-%    offer's requirements, echoing its key terms, with concrete results. ──
-Body paragraph one.
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
 
-\vspace{6pt}
-
-Body paragraph two.
-
-\vspace{6pt}
-
-% ── Closing: availability + call to action ──
-Closing paragraph.
-
-\vspace{12pt}
-
-Sincerely,\par
-\vspace{20pt}
-{\bfseries Full Name}
+\vspace{2cm}
+\noindent\hfill {{SENDER_NAME}}
 
 \end{document}`
