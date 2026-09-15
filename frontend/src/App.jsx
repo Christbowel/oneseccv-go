@@ -237,12 +237,10 @@ function Workspace() {
 
   const handleEditorChange = useCallback((text) => setDraft(previewDoc, text), [setDraft, previewDoc])
 
-  // Compiles the editor text as-is. On failure the text stays in the editor and
-  // the pdflatex message is shown: no AI repair here, the user is in charge.
-  const handleRecompile = useCallback(async () => {
-    const doc = previewDoc
-    const source = editorSource
-    const previousSource = compiledSource
+  // Compiles `source` for `doc` as-is. On failure the text stays in the editor
+  // and the pdflatex message is shown: no AI repair here, the user is in charge.
+  const recompile = useCallback(async (doc, source) => {
+    const previousSource = compiledRef.current[doc]
     if (!source.trim()) return
 
     setRecompiling(true)
@@ -251,7 +249,7 @@ function Workspace() {
       if (doc === 'letter') {
         setLetterSource(source)
         setLetterPages(preview.pages)
-        saveToDrive(latexSource, previewPages, { id: currentCvId, extra: { coverLetterSource: source } })
+        saveToDrive(compiledRef.current.cv, previewPages, { id: currentCvId, extra: { coverLetterSource: source } })
       } else {
         setLatexSource(source)
         setPreviewPages(preview.pages)
@@ -269,22 +267,27 @@ function Workspace() {
     } finally {
       setRecompiling(false)
     }
-  }, [previewDoc, editorSource, compiledSource, latexSource, previewPages, currentCvId, saveToDrive, showToast])
+  }, [previewPages, currentCvId, saveToDrive, showToast])
 
-  // "Quick edit with AI": the answer replaces the editor text; the user recompiles.
+  // Manual edits: the user clicks Recompile.
+  const handleRecompile = useCallback(() => recompile(previewDoc, editorSource), [recompile, previewDoc, editorSource])
+
+  // "Quick edit with AI": the answer replaces the editor text and compiles right away.
   const handleQuickEdit = useCallback(async (instruction) => {
     if (!apiKey) { showToast('error', 'Add your Gemini key in Settings to use AI edits.'); return false }
     const doc = previewDoc
     try {
-      setDraft(doc, await quickEditLatex(apiKey, editorSource, instruction))
+      const source = await quickEditLatex(apiKey, editorSource, instruction)
+      setDraft(doc, source)
       track(EV.editAI, { doc, ok: true })
+      recompile(doc, source)
       return true
     } catch (e) {
       showToast('error', String(e?.message || e))
       track(EV.editAI, { doc, ok: false })
       return false
     }
-  }, [apiKey, previewDoc, editorSource, setDraft, showToast])
+  }, [apiKey, previewDoc, editorSource, setDraft, recompile, showToast])
 
   // ── Generate the matching cover letter ──
   const handleGenerateLetter = useCallback(async () => {
