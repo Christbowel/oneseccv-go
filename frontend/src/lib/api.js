@@ -52,8 +52,20 @@ export function listTemplates() {
   return request('/api/v1/templates', { timeout: 15000 })
 }
 
-export function getTemplate(slug) {
-  return request(`/api/v1/template?slug=${encodeURIComponent(slug)}`, { timeout: 15000 })
+// Templates come from the frozen compile server, where some (jake, swe) lack the
+// UTF-8 / T1 lines that accented output and the Gemini LaTeX rules rely on.
+// T1 alone falls back to bitmap EC fonts there (slow, blurry): lmodern comes with it.
+const ENCODING_LINES = ['\\usepackage[utf8]{inputenc}', '\\usepackage[T1]{fontenc}', '\\usepackage{lmodern}']
+
+function withEncoding(source) {
+  if (ENCODING_LINES.slice(0, 2).every(line => source.includes(line))) return source
+  const missing = ENCODING_LINES.filter(line => !source.includes(line))
+  return source.replace(/\\documentclass[^\n]*\n/, line => `${line}${missing.join('\n')}\n`)
+}
+
+export async function getTemplate(slug) {
+  const template = await request(`/api/v1/template?slug=${encodeURIComponent(slug)}`, { timeout: 15000 })
+  return { ...template, source: withEncoding(template.source) }
 }
 
 export function compilePreview(source, ppi = 300) {

@@ -1,6 +1,13 @@
 import { GEMINI_MODEL, GEMINI_API_BASE } from '../config'
 import { COVER_LETTER_TEMPLATE } from '../lib/coverLetterTemplate'
 
+// The compile server is frozen: pdflatex only, TeX Live base/recommended/extra,
+// English babel only. Every prompt that writes LaTeX keeps the model inside it.
+const PDFLATEX_RULES = `- Do NOT add any \\usepackage line that is not already in the template. Use only the packages the template already loads.
+- Do NOT use babel with any language option other than english. For non-English output, write the text directly in the target language without babel: the template's fonts and encoding already support accented characters (\\usepackage[utf8]{inputenc} and \\usepackage[T1]{fontenc} are present).
+- Do NOT use fontspec, polyglossia, or any XeTeX/LuaTeX-only package. The compiler is pdflatex.
+- If a translation is requested, keep the exact same \\documentclass, packages and macros. Only translate the text content inside the macros.`
+
 // ── Gemini, called straight from the browser ────────────────
 // The key is the user's own and never leaves their device: there is no
 // OneSecCV backend to send it to.
@@ -53,7 +60,8 @@ STRICT TECHNICAL RULES:
 - Escape special LaTeX characters (&, %, $, #, _).
 - Use standard dashes (- or --) for date ranges.
 - Do not invent any information not present in the user data.
-- Rewrite bullets as impact statements: strong action verb, scope, measurable result when the data provides one.`
+- Rewrite bullets as impact statements: strong action verb, scope, measurable result when the data provides one.
+${PDFLATEX_RULES}`
 
   return callGeminiWithRetry(apiKey, prompt)
 }
@@ -87,6 +95,7 @@ Fill the following LaTeX template. Replace every {{PLACEHOLDER}} with real conte
 - PARAGRAPH_3: 2-3 sentences. What the candidate brings, motivation, availability.
 - Escape special LaTeX characters (&, %, $, #, _).
 - Return ONLY the filled LaTeX source. No explanations, no markdown fences.
+${PDFLATEX_RULES}
 
 TEMPLATE:
 ${COVER_LETTER_TEMPLATE}`
@@ -128,7 +137,9 @@ ${source}
 
 Apply this modification: "${instruction}"
 
-Return ONLY the complete modified LaTeX source. No explanations, no markdown fences. Start with \\documentclass and end with \\end{document}.`
+Return ONLY the complete modified LaTeX source. No explanations, no markdown fences. Start with \\documentclass and end with \\end{document}.
+
+${PDFLATEX_RULES}`
 
   return callGeminiWithRetry(apiKey, prompt)
 }
